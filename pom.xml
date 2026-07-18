@@ -12,10 +12,10 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <!-- Keep current. 4.0.7 carries Spring Framework 7.0.8 and fixes the 4.0.x CVEs
+        <!-- Keep current. 4.1.0 carries Spring Framework 7.0.8 and fixes the 4.0.x CVEs
              (CVE-2026-40976 authz bypass, -40973, -40972) and CVE-2026-41842 (MVC DoS).
              Bumping the parent cascades patched Tomcat-EL, Jetty, Postgres, Jackson, etc. -->
-        <version>4.0.7</version>
+        <version>4.1.0</version>
         <relativePath/>
     </parent>
 
