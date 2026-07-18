@@ -1,0 +1,29 @@
+# UAT — user acceptance testing. Production-like, but more observable for testers/QA.
+# Structured JSON logs, app-level DEBUG, half trace sampling.
+spring:
+  jpa:
+    show-sql: false
+  datasource:
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:15}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+  endpoint:
+    health:
+      show-details: when-authorized
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLE_RATE:0.5}
+
+logging:
+  structured:
+    format:
+      console: ecs        # Elastic Common Schema JSON
+  level:
+    root: INFO
+    com.onemount.archetype: DEBUG

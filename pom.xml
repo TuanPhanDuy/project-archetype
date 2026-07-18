@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      Spring Boot 4.0 service archetype.
+      Built on Spring Framework 7 / Java 25, packaged as a GraalVM native image.
+      See README.md for rationale and the conventions every feature follows.
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <!-- Keep current. 4.0.7 carries Spring Framework 7.0.8 and fixes the 4.0.x CVEs
+             (CVE-2026-40976 authz bypass, -40973, -40972) and CVE-2026-41842 (MVC DoS).
+             Bumping the parent cascades patched Tomcat-EL, Jetty, Postgres, Jackson, etc. -->
+        <version>4.0.7</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.onemount</groupId>
+    <artifactId>service-archetype</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>service-archetype</name>
+    <description>Best-practice Spring Boot 4 REST microservice archetype</description>
+
+    <properties>
+        <!-- Java 25 is the recommended baseline for Spring Boot 4 (virtual threads, AOT). -->
+        <java.version>25</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- ===== Logging: Log4j2 instead of the default Logback =====
+             Every Spring Boot starter pulls Logback transitively via spring-boot-starter.
+             Declaring spring-boot-starter directly with the exclusion removes Logback from
+             the whole graph (it's the only path to spring-boot-starter-logging), then the
+             log4j2 starter provides the SLF4J binding. Spring Boot still drives Log4j2 via
+             the logging.* properties (levels, structured JSON, traceId/spanId correlation). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
+        <!-- Web (Spring MVC on virtual threads). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Embedded server: Jetty (replaces the default Tomcat). Version managed by parent. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jetty</artifactId>
+        </dependency>
+
+        <!-- Persistence. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Bean validation (jakarta.validation). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Health, metrics, info endpoints. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- ===== Observability ===== -->
+        <!-- Prometheus scrape endpoint at /actuator/prometheus. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Distributed tracing: Micrometer Tracing over OpenTelemetry. Adds trace/span IDs
+             to logs (log correlation) and propagates context across services. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <!-- Exports spans over OTLP (to an OpenTelemetry Collector / Tempo / etc.).
+             Export only happens when sampling > 0 (see per-profile config). -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
+
+        <!-- Schema migrations. Flyway 11+ ships the Postgres dialect as a separate module.
+             Spring Boot 4 modularized autoconfiguration: spring-boot-flyway carries the
+             Flyway auto-config and is required for migrations to run on startup. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- JSpecify null-safety annotations (Spring Boot 4 default). -->
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+        </dependency>
+
+        <!-- OpenAPI 3 + Swagger UI. springdoc 3.x targets Spring Boot 4 / Jackson 3.
+             Serves the spec at /v3/api-docs and the UI at /swagger-ui.html. -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+
+        <!-- ===== Test ===== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Declared explicitly (also pulled transitively by starter-test) so the
+             ${org.mockito:mockito-core:jar} path resolves for the -javaagent argLine. -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Testcontainers 2.x renamed modules with a testcontainers- prefix.
+             Version is managed by the Spring Boot 4 BOM (2.0.2). -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- Populates ${org.mockito:mockito-core:jar} (and other dependency path
+                 properties) so the -javaagent argLine below can reference the jar. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Load Mockito as a Java agent. Self-attaching is deprecated and will be
+                 blocked on modern JDKs (25+); this is the supported replacement. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+                </configuration>
+            </plugin>
+
+            <!-- Run *IT integration tests in the verify phase (real Postgres via Testcontainers). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!--
+          GraalVM native image. spring-boot-starter-parent already manages the
+          native-maven-plugin; this profile just turns it on:  mvn -Pnative native:compile
+          Requires GraalVM for JDK 25 (native-image 25+ is mandatory for Spring Boot 4).
+        -->
+        <profile>
+            <id>native</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+          Dependency vulnerability scan (OWASP Dependency-Check against the NVD).
+          Run:  NVD_API_KEY=... mvn -Psecurity verify
+          Fails the build on any dependency with a CVSS >= 7. The first run downloads the NVD
+          data cache (slow); get a free key at https://nvd.nist.gov/developers/request-an-api-key.
+          Day-to-day scanning is handled server-side by Dependabot (.github/dependabot.yml).
+        -->
+        <profile>
+            <id>security</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>12.2.2</version>
+                        <configuration>
+                            <failBuildOnCVSS>7</failBuildOnCVSS>
+                            <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

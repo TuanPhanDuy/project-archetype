@@ -1,0 +1,25 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IDE ###
+.idea/
+*.iml
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+.flattened-pom.xml
+
+### OS ###
+.DS_Store
+
+### Build / native ###
+*.log
+build/
+out/
+
+### Archetype (regenerated from the project by archetype/sync.sh) ###
+archetype/src/main/resources/archetype-resources/

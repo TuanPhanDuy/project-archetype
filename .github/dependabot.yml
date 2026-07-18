@@ -1,0 +1,23 @@
+version: 2
+updates:
+  # Java dependencies (the root Maven project).
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      # Batch the noisy ecosystems into one PR each.
+      spring:
+        patterns: ["org.springframework*", "org.springframework.boot*"]
+      test-and-build:
+        patterns: ["org.testcontainers*", "org.mockito*", "org.apache.maven.plugins*"]
+    # Dependabot still opens individual security-update PRs immediately when GitHub raises an
+    # alert, regardless of this weekly cadence — enable Dependabot alerts + security updates
+    # in the repo's Settings → Code security.
+
+  # Keep the GitHub Actions workflow pins current too.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

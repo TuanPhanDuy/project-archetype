@@ -1,0 +1,8 @@
+target/
+build/
+.git/
+.idea/
+*.iml
+.DS_Store
+*.md
+.claude/

@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: service-archetype
+    metrics_path: /actuator/prometheus
+    static_configs:
+      # The app runs on the host; host.docker.internal resolves to it from the container.
+      - targets: ["host.docker.internal:8080"]

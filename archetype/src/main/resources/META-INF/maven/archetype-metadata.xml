@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archetype-descriptor xmlns="https://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.1.0"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      xsi:schemaLocation="https://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.1.0 https://maven.apache.org/xsd/archetype-descriptor-1.1.0.xsd"
+                      name="service-archetype">
+    <!--
+      Everything is filtered="false" (copied verbatim, no Velocity) and packaged="false"
+      (keep the original com/onemount/archetype path). The post-generate Groovy script does
+      all renaming. This is what keeps ${...} and ## untouched.
+    -->
+    <fileSets>
+        <fileSet filtered="false" packaged="false" encoding="UTF-8">
+            <directory>src/main/java</directory>
+            <includes><include>**/*.java</include></includes>
+        </fileSet>
+        <fileSet filtered="false" packaged="false" encoding="UTF-8">
+            <directory>src/test/java</directory>
+            <includes><include>**/*.java</include></includes>
+        </fileSet>
+        <fileSet filtered="false" encoding="UTF-8">
+            <directory>src/main/resources</directory>
+            <includes><include>**/*</include></includes>
+        </fileSet>
+        <fileSet filtered="false" encoding="UTF-8">
+            <directory>.mvn</directory>
+            <includes><include>**/*</include></includes>
+        </fileSet>
+        <fileSet filtered="false" encoding="UTF-8">
+            <directory>.github</directory>
+            <includes><include>**/*</include></includes>
+        </fileSet>
+        <fileSet filtered="false" encoding="UTF-8">
+            <directory>.claude</directory>
+            <includes><include>**/*</include></includes>
+        </fileSet>
+        <fileSet filtered="false" encoding="UTF-8">
+            <directory>k6</directory>
+            <includes><include>**/*</include></includes>
+        </fileSet>
+        <fileSet filtered="false" encoding="UTF-8">
+            <directory>observability</directory>
+            <includes><include>**/*</include></includes>
+        </fileSet>
+        <!-- Root-level files -->
+        <fileSet filtered="false" encoding="UTF-8">
+            <directory></directory>
+            <includes>
+                <include>mvnw</include>
+                <include>mvnw.cmd</include>
+                <include>.gitignore</include>
+                <include>.dockerignore</include>
+                <include>Dockerfile</include>
+                <include>Dockerfile.jvm</include>
+                <include>compose.yaml</include>
+                <include>*.md</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</archetype-descriptor>

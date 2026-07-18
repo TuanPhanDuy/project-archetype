@@ -1,0 +1,56 @@
+name: Perf smoke (k6)
+
+# Manual: build the app, run it against a throwaway Postgres, and run the k6 smoke test.
+# k6 thresholds fail the job on SLO breach. Promote to `pull_request` once it's tuned.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  k6-smoke:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: app
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U app -d app"
+          --health-interval 5s --health-timeout 3s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build jar
+        run: ./mvnw -B --no-transfer-progress package -DskipTests
+
+      - name: Start the app (dev profile, talks to the Postgres service)
+        run: |
+          SPRING_PROFILES_ACTIVE=dev nohup java -jar target/*.jar > app.log 2>&1 &
+          echo $! > app.pid
+
+      - name: Wait for health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf localhost:8080/actuator/health >/dev/null; then echo "up"; exit 0; fi
+            sleep 2
+          done
+          echo "app did not become healthy"; cat app.log; exit 1
+
+      - name: Run k6 smoke
+        run: docker run --rm --network host -v "$PWD/k6:/k6" grafana/k6 run /k6/smoke.js
+
+      - name: Stop the app
+        if: always()
+        run: kill "$(cat app.pid)" 2>/dev/null || true
