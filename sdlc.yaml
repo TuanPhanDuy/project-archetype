@@ -35,6 +35,16 @@ tracker:
   epic_link_field: parent
   fallback_docs: docs/backlog.md   # used when no tracker is connected
 
+# ---- Code hosting: where PRs are reviewed and merged ----
+vcs:
+  type: github
+  # Primary path: the `gh` CLI (already authenticated in this environment) — see
+  #   .claude/commands/review-pr.md, which drives the Code Review + Security Review phases
+  #   against a real PR and gates auto-merge on a clean verdict from both.
+  # Also available: the GitHub MCP server in .mcp.json (structured tool calls, useful for
+  #   agents/environments without `gh` installed). See .env.example for its token.
+  auto_merge_requires: [code-reviewer:APPROVE, security-auditor:PASS]   # any qualifier blocks it
+
 # ---- The team: each role maps to a Claude Code subagent in .claude/agents/ ----
 roles:
   - id: product-owner
@@ -149,6 +159,7 @@ phases:
     name: Code Review
     owner: code-reviewer
     parallel_with: [security_review]
+    command: /review-pr <pr-number>
     inputs: [git diff, tests]
     outputs: [findings]
     entry_gate: Testing exit_gate met.
@@ -158,10 +169,14 @@ phases:
     name: Security Review
     owner: security-auditor
     parallel_with: [code_review]
+    command: /review-pr <pr-number>
     inputs: [git diff, touched surfaces]
     outputs: [findings, severity-rated]
     entry_gate: Testing exit_gate met.
     exit_gate: No Critical/High findings unaddressed.
+    # /review-pr runs both phases together against a real PR (isolated git worktree via
+    # `gh`) and auto-merges only when code-reviewer is APPROVE *and* security-auditor is
+    # PASS with no qualifications; anything less is posted as a PR review for a human.
 
   - id: release
     name: Build / Release

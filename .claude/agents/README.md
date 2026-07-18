@@ -44,6 +44,16 @@ artifacts under `docs/`.
 Phases 5 (review + security) run in parallel and gate the merge. Loop back to
 `spring-developer` on any blocker.
 
+Once a PR is open, run `/review-pr <pr-number>` to drive phase 5 against it directly: it
+checks the PR out into an isolated git worktree (your own working tree is never touched),
+runs `code-reviewer` and `security-auditor` in parallel, posts their findings as a PR
+review, and auto-merges **only** if both come back fully clean (code-reviewer `APPROVE`,
+security-auditor `PASS` — no qualifiers). Anything less is left for a human. See
+[`.claude/commands/review-pr.md`](../commands/review-pr.md) and the `vcs:` block in
+[`sdlc.yaml`](../../sdlc.yaml). GitHub access is via the `gh` CLI by default; the GitHub MCP
+server in [`.mcp.json`](../../.mcp.json) is also available for agents that need structured
+tool calls instead.
+
 ## How to drive it
 
 Claude Code routes to a subagent when you describe phase-shaped work, or you can name one:

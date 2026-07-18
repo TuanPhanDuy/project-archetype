@@ -337,6 +337,12 @@ machine-readably in [`sdlc.yaml`](sdlc.yaml). The backlog lives in `PRD.md`
 Jira via [`.claude/skills/jira/SKILL.md`](.claude/skills/jira/SKILL.md) (Atlassian MCP
 preferred, REST API token fallback — see `.env.example`).
 
+Once a PR is open, `/review-pr <pr-number>` drives Code Review + Security Review against it
+directly — isolated git worktree, `code-reviewer` and `security-auditor` in parallel, and an
+auto-merge that only fires if both come back fully clean (see
+[`.claude/commands/review-pr.md`](.claude/commands/review-pr.md)). GitHub access is via the
+`gh` CLI by default, with the GitHub MCP server ([`.mcp.json`](.mcp.json)) available too.
+
 ## Notes & known caveats
 
 - **OpenAPI** uses `springdoc-openapi` 3.0.3, which is Jackson-3 / Spring Boot 4 compatible
