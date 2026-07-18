@@ -11,10 +11,12 @@ import org.junit.jupiter.api.Test;
  */
 class IdempotencyKeyConflictExceptionTest {
 
-    // U+202E RIGHT-TO-LEFT OVERRIDE (Cf) and U+2028 LINE SEPARATOR (Zl) — spelled out as
-    // escapes, not literal characters, so this file's bytes stay unambiguous.
-    private static final String RIGHT_TO_LEFT_OVERRIDE = "‮";
-    private static final String UNICODE_LINE_SEPARATOR = " ";
+    // Built from numeric code points at runtime, deliberately not written as a literal
+    // character (or an escape sequence for one) anywhere in this source file: static
+    // analyzers rightly flag a raw bidirectional-override character on sight as a potential
+    // "Trojan Source" attack, and a test fixture proving we strip it is no exception.
+    private static final String RIGHT_TO_LEFT_OVERRIDE = String.valueOf((char) 0x202E); // RIGHT-TO-LEFT OVERRIDE (Cf)
+    private static final String UNICODE_LINE_SEPARATOR = String.valueOf((char) 0x2028); // LINE SEPARATOR (Zl)
 
     @Test
     void stripsAsciiControlCharactersFromLoggedMessage() {
