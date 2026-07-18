@@ -343,6 +343,12 @@ auto-merge that only fires if both come back fully clean (see
 [`.claude/commands/review-pr.md`](.claude/commands/review-pr.md)). GitHub access is via the
 `gh` CLI by default, with the GitHub MCP server ([`.mcp.json`](.mcp.json)) available too.
 
+`.mcp.json` also registers ~40 other MCP servers (databases, cloud/DevOps, search,
+communication, project management, data platforms, AI, monitoring, productivity) as
+opt-in placeholders — most need a credential in `.env`, a few need local software running,
+and a couple are best-effort names that need verifying before you rely on them. See
+[`docs/MCP_SERVERS.md`](docs/MCP_SERVERS.md) for the per-server status before using one.
+
 ## Notes & known caveats
 
 - **OpenAPI** uses `springdoc-openapi` 3.0.3, which is Jackson-3 / Spring Boot 4 compatible
