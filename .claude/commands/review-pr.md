@@ -50,8 +50,14 @@ Combine both findings lists into one comment (clearly split into a Code Review s
 a Security Review section, each with its verdict) and post it:
 
 ```bash
-gh pr review "$N" --comment --body-file <(echo "$COMBINED_FINDINGS")
+gh pr comment "$N" --body-file <(echo "$COMBINED_FINDINGS")
 ```
+
+Use `gh pr comment`, not `gh pr review`, here — GitHub rejects a formal review (`--approve`/
+`--request-changes`, and on some setups even `--comment`) from the PR's own author with
+`"Can not request changes on your own pull request"`. Since this command usually runs as the
+same account that opened the PR, a plain issue comment is the reliable path; only reach for
+`gh pr review` if you've confirmed the acting account differs from the PR author.
 
 ## 4. Gate the merge
 
@@ -63,12 +69,9 @@ RECOMMENDATIONS") **and** `--no-merge` was not passed:
 gh pr merge "$N" --squash --delete-branch   # or --merge / --rebase per --merge-strategy
 ```
 
-Otherwise, do **not** merge — instead:
-```bash
-gh pr review "$N" --request-changes --body-file <(echo "$COMBINED_FINDINGS")
-```
-and tell the user this PR needs a human decision, quoting the exact verdicts and why they
-fell short of the clean-merge bar.
+Otherwise, do **not** merge — the comment from step 3 already carries the findings and both
+verdicts, so there's nothing further to post. Just tell the user this PR needs a human
+decision, quoting the exact verdicts and why they fell short of the clean-merge bar.
 
 ## 5. Clean up
 
