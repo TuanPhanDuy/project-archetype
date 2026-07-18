@@ -39,10 +39,14 @@ artifacts under `docs/`.
 | 4 | Testing           | `test-engineer`       | Yes (tests)  | code-reviewer           |
 | 5 | Review            | `code-reviewer`       | No           | (back to dev if changes)|
 | 5 | Security review   | `security-auditor`    | No           | (back to dev if changes)|
-| 6 | Build / Release   | `devops-engineer`     | Yes (infra)  | —                       |
+| 6 | Team Lead approval| `team-lead`           | No           | devops-engineer (or back to any earlier phase) |
+| 7 | Build / Release   | `devops-engineer`     | Yes (infra)  | —                       |
 
-Phases 5 (review + security) run in parallel and gate the merge. Loop back to
-`spring-developer` on any blocker.
+Phases 5 (review + security) run in parallel and gate phase 6. `team-lead` is the final
+go/no-go: it confirms the acceptance criteria are genuinely met and every earlier gate
+actually holds (not just claimed) before release — it doesn't re-review code or re-audit
+security, and it sends work back to whichever phase's gate didn't really hold, not just to
+`spring-developer`.
 
 Once a PR is open, run `/review-pr <pr-number>` to drive phase 5 against it directly: it
 checks the PR out into an isolated git worktree (your own working tree is never touched),
@@ -67,6 +71,7 @@ Claude Code routes to a subagent when you describe phase-shaped work, or you can
 > Use spring-developer to implement the agreed design.
 > Use test-engineer to cover the acceptance criteria.
 > Use code-reviewer and security-auditor to review the diff.
+> Use team-lead to give the final go/no-go before merge.
 > Use devops-engineer to add the CI job and build the native image.
 ```
 
@@ -76,9 +81,9 @@ output stays consistent with the codebase.
 ## Design principles baked into the agents
 
 - **Roles plan, engineers build.** Product owner, scrum master, ux-designer, analysts,
-  architects, and reviewers don't edit source — they produce backlog items, sprint plans,
-  designs, specs, and findings. Only the developer, test, and devops agents write code. This
-  keeps responsibilities honest.
+  architects, reviewers, and team-lead don't edit source — they produce backlog items,
+  sprint plans, designs, specs, findings, and verdicts. Only the developer, test, and devops
+  agents write code. This keeps responsibilities honest.
 - **Definition of done is testable.** Backlog items get acceptance criteria, requirements
   become Given/When/Then, which become `*IT` tests, which the reviewer checks for. Nothing is
   "done" without a green `verify`.

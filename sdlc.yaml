@@ -87,6 +87,10 @@ roles:
     title: DevOps / Release Engineer
     agent: devops-engineer
     skill: CI/CD, builds, containerization, observability, deploy config.
+  - id: team-lead
+    title: Team Lead
+    agent: team-lead
+    skill: Final go/no-go — confirms acceptance criteria met and every prior gate genuinely holds.
 
 # ---- Scrum ceremonies. Cadence is a default — adjust to your team's rhythm. ----
 ceremonies:
@@ -178,12 +182,20 @@ phases:
     # `gh`) and auto-merges only when code-reviewer is APPROVE *and* security-auditor is
     # PASS with no qualifications; anything less is posted as a PR review for a human.
 
+  - id: team_lead_approval
+    name: Team Lead Approval
+    owner: team-lead
+    inputs: [requirements, all prior phase verdicts]
+    outputs: [go/no-go verdict]
+    entry_gate: Code Review and Security Review exit_gates met.
+    exit_gate: "Verdict is APPROVED FOR MERGE — acceptance criteria genuinely met and every prior gate verified, not just claimed."
+
   - id: release
     name: Build / Release
     owner: devops-engineer
     inputs: [all prior phase outputs and gates]
     outputs: [CI green, image build, deploy config]
-    entry_gate: Code Review and Security Review exit_gates met.
+    entry_gate: Team Lead Approval exit_gate met.
     exit_gate: CI green; native/JVM image builds; observability wired.
 
 # ---- Cross-cutting definition of done ----
@@ -191,6 +203,7 @@ definition_of_done:
   - Acceptance criteria all demonstrably met by a passing test.
   - "`./mvnw verify` is green (unit + Testcontainers integration tests)."
   - No blocking code-review findings; no Critical/High security findings.
+  - Team Lead has given an explicit APPROVED FOR MERGE verdict.
   - API errors are RFC 9457 ProblemDetail; schema changes are Flyway migrations.
   - Tracker item (Jira Epic/Story/Subtask) transitioned to Done and linked to the PR.
   - Docs (README/ARCHITECTURE/OpenAPI) updated for any contract/config change.
