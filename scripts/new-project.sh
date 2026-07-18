@@ -29,9 +29,9 @@ set -euo pipefail
 # ---- locate the archetype root (the parent of this script's directory) ----
 ARCHETYPE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-OLD_PACKAGE="com.onemount.archetype"
-OLD_PACKAGE_PATH="com/onemount/archetype"
-OLD_GROUP="com.onemount"
+OLD_PACKAGE="com.anbit.archetype"
+OLD_PACKAGE_PATH="com/anbit/archetype"
+OLD_GROUP="com.anbit"
 OLD_NAME="service-archetype"
 
 NAME="" GROUP="" PACKAGE="" OUTPUT="" FORCE=false DO_GIT=true

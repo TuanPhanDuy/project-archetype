@@ -21,7 +21,7 @@ rsync -a \
   --exclude '.DS_Store' \
   "$ROOT"/ "$DEST"/
 # NOTE: leading-slash excludes are anchored to $ROOT — important because an unanchored
-# "archetype/" would also match the com/onemount/archetype PACKAGE directory and drop
+# "archetype/" would also match the com/anbit/archetype PACKAGE directory and drop
 # all the Java sources.
 
 # The archetype plugin force-filters the root pom.xml through Velocity (it can't be turned

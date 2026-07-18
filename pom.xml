@@ -19,7 +19,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.onemount</groupId>
+    <groupId>com.anbit</groupId>
     <artifactId>service-archetype</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <name>service-archetype</name>

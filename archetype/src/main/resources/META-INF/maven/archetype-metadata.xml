@@ -5,7 +5,7 @@
                       name="service-archetype">
     <!--
       Everything is filtered="false" (copied verbatim, no Velocity) and packaged="false"
-      (keep the original com/onemount/archetype path). The post-generate Groovy script does
+      (keep the original com/anbit/archetype path). The post-generate Groovy script does
       all renaming. This is what keeps ${...} and ## untouched.
     -->
     <fileSets>

@@ -53,10 +53,10 @@ cd ~/code/order-service
 ### What it does
 
 1. `rsync` the archetype, excluding `target/`, `.git/`, `scripts/`, and IDE files.
-2. Move `src/{main,test}/java/com/onemount/archetype` → your package path.
+2. Move `src/{main,test}/java/com/anbit/archetype` → your package path.
 3. Rewrite identifiers in every text file, most-specific first:
-   `com.onemount.archetype` → your package, `com/onemount/archetype` → your path,
-   `com.onemount` → your group, `service-archetype` → your artifact.
+   `com.anbit.archetype` → your package, `com/anbit/archetype` → your path,
+   `com.anbit` → your group, `service-archetype` → your artifact.
 4. `git init` + stage (unless `--no-git`).
 
 It does **not** strip the sample features (`product`, `category`, `order`, `job`) — they're
@@ -69,7 +69,7 @@ in [`archetype/`](../archetype/) (built from this same project, so the two never
 
 ```bash
 ./archetype/sync.sh && mvn -f archetype/pom.xml install
-mvn archetype:generate -DarchetypeGroupId=com.onemount \
+mvn archetype:generate -DarchetypeGroupId=com.anbit \
   -DarchetypeArtifactId=service-archetype -DarchetypeVersion=0.1.0
 ```
 

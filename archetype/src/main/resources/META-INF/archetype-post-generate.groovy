@@ -11,9 +11,9 @@ def version    = request.version
 def pkg        = request.package
 def root       = new File(request.outputDirectory, artifactId)
 
-final OLD_PKG     = 'com.onemount.archetype'
-final OLD_PKGPATH = 'com/onemount/archetype'
-final OLD_GROUP   = 'com.onemount'
+final OLD_PKG     = 'com.anbit.archetype'
+final OLD_PKGPATH = 'com/anbit/archetype'
+final OLD_GROUP   = 'com.anbit'
 final OLD_NAME    = 'service-archetype'
 final OLD_VERSION = '0.1.0-SNAPSHOT'
 def pkgPath = pkg.replace('.', '/')
@@ -28,7 +28,7 @@ def pkgPath = pkg.replace('.', '/')
     }
 }
 
-// 2) Prune now-empty leftover package directories (e.g. com/onemount).
+// 2) Prune now-empty leftover package directories (e.g. com/anbit).
 def pruneEmpty
 pruneEmpty = { File d ->
     if (d == null || !d.directory) return

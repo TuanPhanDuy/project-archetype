@@ -4,7 +4,7 @@ Generates a new service from this reference project with the native Maven comman
 
 ```bash
 mvn archetype:generate \
-  -DarchetypeGroupId=com.onemount \
+  -DarchetypeGroupId=com.anbit \
   -DarchetypeArtifactId=service-archetype \
   -DarchetypeVersion=0.1.0
 ```
@@ -34,7 +34,7 @@ mvn -f archetype/pom.xml clean install           # install to your local ~/.m2
 mvn -f archetype/pom.xml clean deploy            # to your Nexus/Artifactory (configure distributionManagement)
 ```
 
-Then anyone can `mvn archetype:generate -DarchetypeGroupId=com.onemount -DarchetypeArtifactId=service-archetype -DarchetypeVersion=…`. A CI job can run `sync.sh` + `deploy` on tags.
+Then anyone can `mvn archetype:generate -DarchetypeGroupId=com.anbit -DarchetypeArtifactId=service-archetype -DarchetypeVersion=…`. A CI job can run `sync.sh` + `deploy` on tags.
 
 ## How it works (and why it's built this way)
 
@@ -45,7 +45,7 @@ project: `${DB_URL:…}` in YAML, `${{ github.* }}` in workflows, `${BASE_URL}` 
 - **Everything is copied raw** (`filtered="false"` in `archetype-metadata.xml`) — no Velocity
   templating of file contents.
 - **`META-INF/archetype-post-generate.groovy`** then does the renaming (package → your
-  package, `com.onemount` → your groupId, `service-archetype` → your artifactId,
+  package, `com.anbit` → your groupId, `service-archetype` → your artifactId,
   `0.1.0-SNAPSHOT` → your version) and moves the Java sources into your package — the same
   transformation as `scripts/new-project.sh`.
 - The only file Maven force-filters is the root `pom.xml`; `sync.sh` wraps its

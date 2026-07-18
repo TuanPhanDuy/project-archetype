@@ -121,7 +121,7 @@ management:
 logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}
-    com.onemount.archetype: ${LOG_LEVEL_APP:INFO}
+    com.anbit.archetype: ${LOG_LEVEL_APP:INFO}
 
 # ============================================================================
 # OpenAPI / Swagger UI (springdoc). Spec: /v3/api-docs  UI: /swagger-ui.html
@@ -136,4 +136,4 @@ springdoc:
     display-request-duration: true
   show-actuator: false
   # Only document our own endpoints.
-  packages-to-scan: com.onemount.archetype
+  packages-to-scan: com.anbit.archetype

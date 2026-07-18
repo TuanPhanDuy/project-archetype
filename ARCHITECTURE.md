@@ -9,7 +9,7 @@ and so on. Each class name is prefixed by its domain (`Product*`, `Order*`) so r
 classes are easy to find across layers.
 
 ```
-com.onemount.archetype
+com.anbit.archetype
 ├── Application.java                 # entry point
 ├── package-info.java                # @NullMarked (JSpecify) for the whole tree
 │

@@ -26,7 +26,7 @@ Prefer the native Maven command? There's also an installable **Maven archetype**
 
 ```bash
 mvn archetype:generate \
-  -DarchetypeGroupId=com.onemount \
+  -DarchetypeGroupId=com.anbit \
   -DarchetypeArtifactId=service-archetype \
   -DarchetypeVersion=0.1.0
 ```
@@ -69,7 +69,7 @@ in [`scripts/README.md`](scripts/README.md).
 ## Project layout (package-by-layer)
 
 ```
-src/main/java/com/onemount/archetype/
+src/main/java/com/anbit/archetype/
 ├── Application.java
 ├── package-info.java          # @NullMarked (JSpecify) for the whole tree
 ├── controller/                # HTTP boundary: thin, validate + delegate + map DTOs

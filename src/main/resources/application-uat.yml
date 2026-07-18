@@ -26,4 +26,4 @@ logging:
       console: ecs        # Elastic Common Schema JSON
   level:
     root: INFO
-    com.onemount.archetype: DEBUG
+    com.anbit.archetype: DEBUG

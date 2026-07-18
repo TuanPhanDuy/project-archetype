@@ -28,6 +28,6 @@ management:
 
 logging:
   level:
-    com.onemount.archetype: DEBUG
+    com.anbit.archetype: DEBUG
     org.hibernate.SQL: DEBUG
     org.springframework.web: DEBUG

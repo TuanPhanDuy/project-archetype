@@ -9,7 +9,7 @@
 
       Build/install:   ./sync.sh && mvn -f archetype/pom.xml clean install
       Generate:        mvn archetype:generate \
-                         -DarchetypeGroupId=com.onemount \
+                         -DarchetypeGroupId=com.anbit \
                          -DarchetypeArtifactId=service-archetype \
                          -DarchetypeVersion=0.1.0
 
@@ -17,7 +17,7 @@
       script renames the package / groupId / artifactId / version — so the heavy ${...}
       and ## usage in yaml/workflows/k6/markdown is preserved byte-for-byte.
     -->
-    <groupId>com.onemount</groupId>
+    <groupId>com.anbit</groupId>
     <artifactId>service-archetype</artifactId>
     <version>0.1.0</version>
     <packaging>maven-archetype</packaging>

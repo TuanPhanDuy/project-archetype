@@ -29,7 +29,7 @@ logging:
   level:
     root: WARN
     org.springframework: WARN
-    com.onemount.archetype: INFO
+    com.anbit.archetype: INFO
 
 # Keep the machine-readable spec available (gateways/portals can pull it), but turn off
 # the interactive Swagger UI in production.
