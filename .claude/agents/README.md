@@ -5,6 +5,14 @@ that decide *what* to build and *how the team works*, and **SDLC agents** that e
 phase. Each is a specialist with a system prompt that encodes this archetype's conventions,
 and they hand off to one another explicitly.
 
+The whole thing runs as Scrum: [`sdlc.yaml`](../../sdlc.yaml) is the machine-readable source
+of truth for the roles, ceremonies (standup/planning/review/retro), phase gates, and the
+Jira tracker wiring. Write backlog items in `PRD.md` (template:
+[`docs/templates/PRD_TEMPLATE.md`](../../docs/templates/PRD_TEMPLATE.md)), then run
+`/prd-to-jira` to turn it into linked Epics/Stories/Subtasks in Jira — see
+[`.claude/skills/jira/SKILL.md`](../skills/jira/SKILL.md) for how the tracker connection
+works (Atlassian MCP preferred, REST API token fallback).
+
 ## Agile & design roles
 
 These wrap the engineering pipeline — they shape and schedule the work, but don't write code.

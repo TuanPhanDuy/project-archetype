@@ -1,0 +1,188 @@
+# =====================================================================
+# Software Development Life Cycle (SDLC) definition for this service.
+# Machine-readable source of truth for the Scrum/Agile team of role-
+# specialized Claude Code subagents, the ceremonies, the phase pipeline,
+# and their entry/exit gates. Human-readable overview in
+# .claude/agents/README.md; Jira wiring in .claude/skills/jira/SKILL.md.
+# =====================================================================
+
+project:
+  name: service-archetype   # renamed automatically by scripts/new-project.sh
+  description: >
+    Spring Boot 4 (Spring Framework 7, Java 25) REST microservice archetype,
+    run end-to-end by a team of role-specialized Claude Code subagents.
+  stack: Java 25, Spring Boot 4, Postgres, Flyway, Testcontainers
+
+methodology: scrum
+sprint_length_days: 10   # two-week sprints by default; change to fit your team
+
+# ---- Issue tracker: where the backlog, sprints, and work-item status live ----
+tracker:
+  type: jira
+  # Preferred: Atlassian Remote MCP server (OAuth — no token stored in the repo).
+  #   claude mcp add --transport http atlassian https://mcp.atlassian.com/v1/sse
+  # Fallback: Jira REST API v3 with an API token. See .env.example and
+  #   .claude/skills/jira/SKILL.md for setup and field mapping.
+  project_key_env: JIRA_PROJECT_KEY
+  issue_types:
+    epic: Epic
+    story: Story
+    subtask: Subtask
+    bug: Bug
+  # Jira Cloud "team-managed" projects link children via the `parent` field;
+  # classic "company-managed" projects use the Epic Link custom field instead —
+  # set jira.epic_link_field_id in .env if yours is a classic project.
+  epic_link_field: parent
+  fallback_docs: docs/backlog.md   # used when no tracker is connected
+
+# ---- The team: each role maps to a Claude Code subagent in .claude/agents/ ----
+roles:
+  - id: product-owner
+    title: Product Owner
+    agent: product-owner
+    skill: Backlog, priorities, PRD.md, enhancement items with business value + acceptance criteria.
+  - id: scrum-master
+    title: Scrum Master
+    agent: scrum-master
+    skill: Sprint planning, board, ceremonies, blockers.
+  - id: ux-designer
+    title: UI/UX Designer
+    agent: ux-designer
+    skill: API/UX and error ergonomics; frontend flows/wireframes.
+  - id: requirements-analyst
+    title: Requirements / Business Analyst
+    agent: requirements-analyst
+    skill: User stories, acceptance criteria, scope, non-functionals.
+  - id: solution-architect
+    title: Solution Architect
+    agent: solution-architect
+    skill: API contract, data model, component design, work breakdown.
+  - id: spring-developer
+    title: Backend Engineer
+    agent: spring-developer
+    skill: Implementation on the archetype's conventions.
+  - id: test-engineer
+    title: QA / Test Engineer
+    agent: test-engineer
+    skill: Unit + Testcontainers integration tests from acceptance criteria.
+  - id: code-reviewer
+    title: Code Reviewer
+    agent: code-reviewer
+    skill: Diff review for correctness, convention-adherence, simplicity.
+  - id: security-auditor
+    title: Security Reviewer
+    agent: security-auditor
+    skill: OWASP API Top 10, authz, input handling, secrets.
+  - id: devops-engineer
+    title: DevOps / Release Engineer
+    agent: devops-engineer
+    skill: CI/CD, builds, containerization, observability, deploy config.
+
+# ---- Scrum ceremonies. Cadence is a default — adjust to your team's rhythm. ----
+ceremonies:
+  - id: backlog_refinement
+    name: Backlog Refinement
+    owner: product-owner
+    cadence: ongoing, at least once per sprint
+    command: /prd-to-jira
+    purpose: >
+      Turn PRD.md into Ready backlog items — Epics, Stories with Given/When/Then
+      acceptance criteria, and Subtasks — created (or updated) in Jira.
+  - id: sprint_planning
+    name: Sprint Planning
+    owner: scrum-master
+    participants: [product-owner, solution-architect]
+    cadence: start of every sprint
+    purpose: Pull Ready items into the sprint under one sprint goal, sized to capacity.
+  - id: daily_standup
+    name: Daily Standup
+    owner: scrum-master
+    cadence: daily
+    purpose: Progress / plan / blockers per in-flight item. Keep it under 15 minutes.
+  - id: sprint_review
+    name: Sprint Review
+    owner: scrum-master
+    participants: [product-owner]
+    cadence: end of every sprint
+    purpose: Demo what shipped against the sprint goal; gather feedback.
+  - id: retrospective
+    name: Retrospective
+    owner: scrum-master
+    cadence: end of every sprint
+    purpose: What went well / what to improve, with concrete, owned action items.
+
+# ---- Lifecycle phases for a single work item, in order. Small items may skip phases. ----
+phases:
+  - id: requirements
+    name: Requirements
+    owner: requirements-analyst
+    inputs: [backlog item (Jira Story / PRD.md), existing code]
+    outputs: [acceptance criteria (Given/When/Then), non-functionals, open questions]
+    entry_gate: Item is in the sprint (Sprint Planning) or explicitly requested.
+    exit_gate: Acceptance criteria are unambiguous; open questions resolved.
+
+  - id: design
+    name: Design
+    owner: solution-architect
+    inputs: [requirements]
+    outputs: [API contract, data model / Flyway plan, work breakdown]
+    entry_gate: Requirements exit_gate met.
+    exit_gate: Every requirement maps to a designed component; work breakdown is executable.
+
+  - id: implementation
+    name: Implementation
+    owner: spring-developer
+    inputs: [design, work breakdown]
+    outputs: [code changes]
+    entry_gate: Design exit_gate met.
+    exit_gate: "./mvnw compile succeeds; conventions honored (package-by-layer, DTO boundary, Flyway-owned schema)."
+
+  - id: testing
+    name: Testing
+    owner: test-engineer
+    inputs: [acceptance criteria, code changes]
+    outputs: [unit + Testcontainers integration tests]
+    entry_gate: Implementation exit_gate met.
+    exit_gate: Every acceptance criterion covered by a passing test; ./mvnw verify green.
+
+  - id: code_review
+    name: Code Review
+    owner: code-reviewer
+    parallel_with: [security_review]
+    inputs: [git diff, tests]
+    outputs: [findings]
+    entry_gate: Testing exit_gate met.
+    exit_gate: No blocking findings remain.
+
+  - id: security_review
+    name: Security Review
+    owner: security-auditor
+    parallel_with: [code_review]
+    inputs: [git diff, touched surfaces]
+    outputs: [findings, severity-rated]
+    entry_gate: Testing exit_gate met.
+    exit_gate: No Critical/High findings unaddressed.
+
+  - id: release
+    name: Build / Release
+    owner: devops-engineer
+    inputs: [all prior phase outputs and gates]
+    outputs: [CI green, image build, deploy config]
+    entry_gate: Code Review and Security Review exit_gates met.
+    exit_gate: CI green; native/JVM image builds; observability wired.
+
+# ---- Cross-cutting definition of done ----
+definition_of_done:
+  - Acceptance criteria all demonstrably met by a passing test.
+  - "`./mvnw verify` is green (unit + Testcontainers integration tests)."
+  - No blocking code-review findings; no Critical/High security findings.
+  - API errors are RFC 9457 ProblemDetail; schema changes are Flyway migrations.
+  - Tracker item (Jira Epic/Story/Subtask) transitioned to Done and linked to the PR.
+  - Docs (README/ARCHITECTURE/OpenAPI) updated for any contract/config change.
+
+# ---- Conventions ----
+conventions:
+  branching: trunk-based; short-lived feature branches feature/<jira-key>-<slug>.
+  commits: Conventional Commits (feat, fix, docs, refactor, test, chore, ci); reference the Jira key.
+  pull_requests: PR title/description reference the Jira Story key; CI must pass before merge.
+  versioning: SemVer; devops-engineer bumps pom.xml on release.

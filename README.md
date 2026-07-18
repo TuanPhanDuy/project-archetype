@@ -325,9 +325,17 @@ Notes:
 ## SDLC multi-agent setup
 
 `.claude/agents/` contains one Claude Code subagent per SDLC phase — requirements → design
-→ implementation → testing → review (+ security) → build/release. Each is a scoped
-specialist that knows this archetype's conventions and hands off to the next. See
+→ implementation → testing → review (+ security) → build/release — plus Scrum roles
+(product owner, scrum master, UX designer). Each is a scoped specialist that knows this
+archetype's conventions and hands off to the next. See
 [`.claude/agents/README.md`](.claude/agents/README.md) for the pipeline and how to drive it.
+
+The process itself (roles, Scrum ceremonies, phase gates, definition of done) is defined
+machine-readably in [`sdlc.yaml`](sdlc.yaml). The backlog lives in `PRD.md`
+(template: [`docs/templates/PRD_TEMPLATE.md`](docs/templates/PRD_TEMPLATE.md)); running
+`/prd-to-jira` parses it into linked Epics/Stories/Subtasks and creates or syncs them in
+Jira via [`.claude/skills/jira/SKILL.md`](.claude/skills/jira/SKILL.md) (Atlassian MCP
+preferred, REST API token fallback — see `.env.example`).
 
 ## Notes & known caveats
 

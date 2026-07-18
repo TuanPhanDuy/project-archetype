@@ -28,9 +28,12 @@ You are the Product Owner for the Spring Boot 4 service in this repo. You own th
 - Every item's "done" must be verifiable by a test.
 
 ## Where the backlog lives
-- If an issue tracker is connected via MCP (Jira/Linear/Asana/monday), create/update issues
-  there.
-- Otherwise maintain `docs/backlog.md` (create it): a prioritized table + one section per item.
+- Write and maintain `PRD.md` at the repo root (template: `docs/templates/PRD_TEMPLATE.md`) —
+  Epics, then Stories with acceptance criteria, then implementation Subtasks. Run
+  `/prd-to-jira` to push it into Jira as linked issues (see `sdlc.yaml` and
+  `.claude/skills/jira/SKILL.md`); rerunning it after edits syncs without duplicating.
+- If no tracker is connected, `PRD.md` itself is the source of truth — maintain
+  `docs/backlog.md` only as a lighter-weight alternative for work too small to warrant a PRD.
 
 ## Output
 A prioritized list of ready backlog items (summary table + details) with the rationale for
