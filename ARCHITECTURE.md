@@ -100,6 +100,7 @@ Spring's built-in exceptions plus our own:
 | `ConstraintViolationException` (params)| 400    | `urn:problem:validation`  |
 | `DataIntegrityViolationException`      | 409    | `urn:problem:data-integrity` |
 | `OptimisticLockingFailureException`    | 409    | `urn:problem:optimistic-lock` |
+| `IdempotencyKeyConflictException`      | 409    | `urn:problem:idempotency-key-reuse` |
 | anything else                          | 500    | `urn:problem:internal`    |
 
 Throw a domain exception from the service; add a new `@ExceptionHandler` here for a new

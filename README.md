@@ -119,6 +119,28 @@ curl -s -X POST localhost:8080/api/v1/orders \
 # → 201 Created, body includes status=CREATED and totalAmount=37.50
 ```
 
+Pass an `Idempotency-Key` header to make retries of this endpoint safe (e.g. after a client
+timeout where you don't know if the first request landed). Replaying the same key with the
+same body returns the original order instead of creating a duplicate; replaying it with a
+different body is rejected with `409 Conflict` (`urn:problem:idempotency-key-reuse`):
+
+```bash
+KEY=$(uuidgen)
+
+curl -s -X POST localhost:8080/api/v1/orders \
+  -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $KEY" \
+  -d "{\"customerName\":\"Grace\",\"items\":[{\"productId\":\"$PID\",\"quantity\":3}]}"
+# → 201 Created
+
+# Retried with the same key + same body → the same order comes back, no duplicate created
+curl -s -X POST localhost:8080/api/v1/orders \
+  -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $KEY" \
+  -d "{\"customerName\":\"Grace\",\"items\":[{\"productId\":\"$PID\",\"quantity\":3}]}"
+# → 201 Created, same order id as above
+```
+
 **Asynchronous** — the request is *accepted*, work runs in the background on a virtual-thread
 executor, and the client polls a job for the outcome.
 
@@ -321,13 +343,20 @@ Notes:
   so the REST endpoints are open by default. Add `spring-boot-starter-security` (pinned to a
   patched version) and a filter chain before exposing the service; until then, gate it at the
   network/gateway layer. (Actuator already restricts detail to `when-authorized`.)
+- **This amplifies for `Idempotency-Key` (`POST /api/v1/orders`).** The key is a bare,
+  unauthenticated, globally-unique string with no owner check and no expiry — any caller who
+  guesses or observes a key in flight (before the legitimate request lands) can claim it first,
+  permanently denying it to its rightful owner (every future request with that key either
+  returns the attacker's order or 409s, forever — there's no TTL/cleanup job). Once real auth
+  exists, scope idempotency records by `(caller identity, key)` instead of key alone; until
+  then, treat this the same as the broader no-auth gap above.
 
 ## SDLC multi-agent setup
 
 `.claude/agents/` contains one Claude Code subagent per SDLC phase — requirements → design
-→ implementation → testing → review (+ security) → build/release — plus Scrum roles
-(product owner, scrum master, UX designer). Each is a scoped specialist that knows this
-archetype's conventions and hands off to the next. See
+→ implementation → testing → review (+ security) → team-lead approval → build/release —
+plus Scrum roles (product owner, scrum master, UX designer). Each is a scoped specialist
+that knows this archetype's conventions and hands off to the next. See
 [`.claude/agents/README.md`](.claude/agents/README.md) for the pipeline and how to drive it.
 
 The process itself (roles, Scrum ceremonies, phase gates, definition of done) is defined

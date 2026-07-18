@@ -18,6 +18,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
@@ -42,6 +43,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
         return problem(HttpStatus.NOT_FOUND, "Resource not found", "resource-not-found", ex.getMessage());
+    }
+
+    @ExceptionHandler(IdempotencyKeyConflictException.class)
+    public ProblemDetail handleIdempotencyKeyConflict(IdempotencyKeyConflictException ex) {
+        // The key/hash/order details live only in the exception message, logged server-side.
+        log.warn(ex.getMessage());
+        return problem(HttpStatus.CONFLICT, "Idempotency key reuse", "idempotency-key-reuse",
+                "The idempotency key was already used with a request that had a different body");
     }
 
     // ---- Validation on path/query params or at the service layer ----
@@ -90,6 +99,23 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setType(type("validation"));
         problem.setProperty("errors", ex.getBindingResult().getFieldErrors().stream()
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                .toList());
+        return super.handleExceptionInternal(ex, problem, headers, status, request);
+    }
+
+    // ---- Same treatment for @RequestHeader/@RequestParam constraint failures (e.g. @Size on
+    // an @RequestHeader method parameter) so they come back as the same "validation" problem
+    // type as body validation, instead of Spring's default shape ----
+
+    @Override
+    protected ResponseEntity<Object> handleHandlerMethodValidationException(
+            HandlerMethodValidationException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ProblemDetail problem = ex.getBody();
+        problem.setTitle("Validation failed");
+        problem.setType(type("validation"));
+        problem.setProperty("errors", ex.getParameterValidationResults().stream()
+                .flatMap(result -> result.getResolvableErrors().stream()
+                        .map(err -> result.getMethodParameter().getParameterName() + ": " + err.getDefaultMessage()))
                 .toList());
         return super.handleExceptionInternal(ex, problem, headers, status, request);
     }

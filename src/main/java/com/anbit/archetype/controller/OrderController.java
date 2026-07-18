@@ -10,17 +10,22 @@ import com.anbit.archetype.dto.OrderSummaryResponse;
 import com.anbit.archetype.service.FulfillmentService;
 import com.anbit.archetype.service.JobService;
 import com.anbit.archetype.service.OrderService;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import java.net.URI;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -37,6 +42,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * </ul>
  */
 @Tag(name = "Orders", description = "Synchronous order creation and asynchronous fulfillment")
+@Validated
 @RestController
 @RequestMapping("/api/v1/orders")
 public class OrderController {
@@ -61,11 +67,25 @@ public class OrderController {
         return OrderResponse.from(orderService.findById(id));
     }
 
-    /** Synchronous process: validate, price, persist, and return the finished order. */
+    /**
+     * Synchronous process: validate, price, persist, and return the finished order.
+     *
+     * <p>An {@code Idempotency-Key} header makes retries safe: replaying the same key with the
+     * same body returns the original order instead of creating a duplicate; replaying it with a
+     * different body is rejected with 409.
+     */
     @PostMapping
     public ResponseEntity<OrderResponse> create(
-            @Valid @RequestBody CreateOrderRequest request, UriComponentsBuilder uriBuilder) {
-        Order created = orderService.create(request);
+            @Valid @RequestBody CreateOrderRequest request,
+            @Parameter(
+                    description = "Optional client-generated key for safely retrying this exact request. "
+                            + "Reusing the same key with the same body returns the original order instead of "
+                            + "creating a duplicate; reusing it with a different body is rejected.",
+                    example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+            @RequestHeader(value = "Idempotency-Key", required = false)
+            @Size(max = 255, message = "must be at most 255 characters") @Nullable String idempotencyKey,
+            UriComponentsBuilder uriBuilder) {
+        Order created = orderService.create(request, idempotencyKey);
         URI location = uriBuilder.path("/api/v1/orders/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(location).body(OrderResponse.from(created));
     }
