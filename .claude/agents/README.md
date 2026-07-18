@@ -89,6 +89,11 @@ output stays consistent with the codebase.
   "done" without a green `verify`.
 - **Conventions over re-explanation.** Every agent points at the same rules (package-by-
   layer, Flyway-owned schema, DTO boundaries, native-image safety) so they don't drift.
+- **Don't design/implement against stale knowledge.** `solution-architect`, `spring-developer`,
+  `test-engineer`, and `devops-engineer` are instructed to pull current library docs via the
+  Context7 MCP server ([`.mcp.json`](../../.mcp.json)) before committing to an API shape they
+  aren't certain is still current, falling back to `WebSearch` if Context7 isn't connected.
+  See [`docs/MCP_SERVERS.md`](../../docs/MCP_SERVERS.md#core).
 
 Customize freely: edit the `tools:`/`model:` frontmatter or the prompts to match your
 team's process. See the Claude Code subagents docs for the full frontmatter spec.

@@ -351,6 +351,13 @@ Notes:
   exists, scope idempotency records by `(caller identity, key)` instead of key alone; until
   then, treat this the same as the broader no-auth gap above.
 
+## Git workflow
+
+Trunk-based, squash-only, Conventional Commits — enforced by a commit-msg hook, a PR-title
+CI check, and branch protection on `main` (required checks, no force-push). See
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for the full write-up; run `./scripts/setup-git-hooks.sh`
+once per clone.
+
 ## SDLC multi-agent setup
 
 `.claude/agents/` contains one Claude Code subagent per SDLC phase — requirements → design

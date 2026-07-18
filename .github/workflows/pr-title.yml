@@ -1,0 +1,26 @@
+name: PR title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  lint:
+    name: Conventional Commit title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check title matches Conventional Commits
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore)(\([a-zA-Z0-9_.-]+\))?!?: .{1,}'
+          echo "PR title: $TITLE"
+          if [[ ! "$TITLE" =~ $pattern ]]; then
+            echo "::error::PR title isn't a Conventional Commit — expected '<type>(<scope>)?: description'."
+            echo "Types: feat fix docs style refactor perf test build ci chore. See CONTRIBUTING.md."
+            exit 1
+          fi

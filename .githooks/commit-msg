@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# Enforces Conventional Commits on the subject line. Installed via
+# `./scripts/setup-git-hooks.sh` (sets core.hooksPath to this directory).
+#
+set -euo pipefail
+
+MSG_FILE="$1"
+SUBJECT="$(head -n1 "$MSG_FILE")"
+
+# Let git's own housekeeping commits through untouched.
+if [[ "$SUBJECT" =~ ^(Merge|Revert|fixup!|squash!) ]]; then
+  exit 0
+fi
+
+PATTERN='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore)(\([a-zA-Z0-9_.-]+\))?!?: .{1,}'
+
+if [[ ! "$SUBJECT" =~ $PATTERN ]]; then
+  cat >&2 <<EOF
+error: commit subject doesn't look like a Conventional Commit:
+
+  $SUBJECT
+
+Expected: <type>(<optional scope>)!?: <description>
+  type = feat|fix|docs|style|refactor|perf|test|build|ci|chore
+
+Examples:
+  feat(orders): add Idempotency-Key support
+  fix: close the merge-vs-persist race on IdempotencyKey
+  docs: document the git workflow
+
+See CONTRIBUTING.md. (Bypass once with: git commit --no-verify)
+EOF
+  exit 1
+fi

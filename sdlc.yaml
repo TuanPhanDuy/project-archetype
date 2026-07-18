@@ -208,9 +208,17 @@ definition_of_done:
   - Tracker item (Jira Epic/Story/Subtask) transitioned to Done and linked to the PR.
   - Docs (README/ARCHITECTURE/OpenAPI) updated for any contract/config change.
 
-# ---- Conventions ----
+# ---- Conventions — see CONTRIBUTING.md for the full write-up ----
 conventions:
   branching: trunk-based; short-lived feature branches feature/<jira-key>-<slug>.
-  commits: Conventional Commits (feat, fix, docs, refactor, test, chore, ci); reference the Jira key.
-  pull_requests: PR title/description reference the Jira Story key; CI must pass before merge.
+  commits: >
+    Conventional Commits (feat, fix, docs, style, refactor, perf, test, build, ci, chore),
+    enforced by the .githooks/commit-msg hook (run scripts/setup-git-hooks.sh once per
+    clone) and, on the PR, by .github/workflows/pr-title.yml. Reference the Jira key.
+  pull_requests: >
+    Use .github/pull_request_template.md. Branch protection on main requires the
+    "Build & test (JDK 25)" and "SonarCloud Code Analysis" checks to pass, blocks force
+    pushes/deletions, and requires conversation resolution. Merge strategy is squash-only
+    (PR title becomes the commit message — must itself be a valid Conventional Commit).
+    Run /review-pr for automated code-reviewer + security-auditor findings.
   versioning: SemVer; devops-engineer bumps pom.xml on release.
