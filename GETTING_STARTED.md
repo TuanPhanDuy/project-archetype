@@ -2,7 +2,8 @@
 
 Generate a project from the archetype, configure it for local development, and run it.
 For architecture, the relation model, observability, environments, k6, and packaging, see
-[`README.md`](README.md).
+[`README.md`](README.md). Contributing to *this* archetype repo itself, rather than a
+project generated from it? See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the git workflow.
 
 ## 1. Prerequisites
 
