@@ -10,7 +10,7 @@ project — verified by generating one and running its full `./mvnw verify`.
 ### Usage
 
 Run it with no arguments to be prompted for each value (name and groupId are required;
-package and output directory have sensible defaults you can accept with Enter):
+package, output directory, and purpose have sensible defaults you can accept with Enter):
 
 ```bash
 scripts/new-project.sh
@@ -18,6 +18,7 @@ scripts/new-project.sh
 # Maven groupId: com.acme
 # Base package [com.acme.orderservice]:
 # Output directory [../order-service]:
+# Project purpose, e.g. 'an order management API for e-commerce checkout' [this service]:
 # Proceed? [Y/n]:
 ```
 
@@ -25,7 +26,7 @@ Or pass everything as flags (required for non-interactive/CI use — with no TTY
 flags it exits with an error rather than hanging on a prompt):
 
 ```bash
-scripts/new-project.sh --name <artifact> --group <groupId> [--package <base.pkg>] [--output <dir>]
+scripts/new-project.sh --name <artifact> --group <groupId> [--package <base.pkg>] [--output <dir>] [--purpose <text>]
 ```
 
 | Flag              | Required | Default                          | Meaning                              |
@@ -34,6 +35,7 @@ scripts/new-project.sh --name <artifact> --group <groupId> [--package <base.pkg>
 | `-g, --group`     | yes      | —                                | Maven groupId (`com.acme`)           |
 | `-p, --package`   | no       | `<group>.<name without dashes>`  | Java base package                    |
 | `-o, --output`    | no       | `../<name>`                      | target directory                     |
+| `-d, --purpose`   | no       | `this service`                   | one-line project purpose, threaded into the copied `.claude/` agent/skill/command system prompts |
 | `--force`         | no       | off                              | overwrite an existing target         |
 | `--no-git`        | no       | off                              | skip `git init` in the new project   |
 
@@ -44,7 +46,8 @@ scripts/new-project.sh \
   --name order-service \
   --group com.acme \
   --package com.acme.orderservice \
-  --output ~/code/order-service
+  --output ~/code/order-service \
+  --purpose "an order management API for e-commerce checkout"
 
 cd ~/code/order-service
 ./mvnw verify          # green: 4 unit + 7 integration tests (needs Docker)
@@ -56,7 +59,10 @@ cd ~/code/order-service
 2. Move `src/{main,test}/java/com/anbit/archetype` → your package path.
 3. Rewrite identifiers in every text file, most-specific first:
    `com.anbit.archetype` → your package, `com/anbit/archetype` → your path,
-   `com.anbit` → your group, `service-archetype` → your artifact.
+   `com.anbit` → your group, `service-archetype` → your artifact,
+   `{{PROJECT_PURPOSE}}` → your `--purpose` (or `this service` if omitted) — this fills in the
+   copied `.claude/agents`, `.claude/skills`, and `.claude/commands` system prompts so each
+   subagent describes what the service is *for*, not just its Spring Boot 4 tech stack.
 4. `git init` + stage (unless `--no-git`).
 
 It does **not** strip the sample features (`product`, `category`, `order`, `job`) — they're

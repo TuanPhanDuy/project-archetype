@@ -17,6 +17,10 @@
 #   -g, --group     Maven groupId         (e.g. com.acme)              [prompted if omitted]
 #   -p, --package   Java base package     (e.g. com.acme.orderservice) [default: <group>.<name-without-dashes>]
 #   -o, --output    Target directory                                   [default: ../<name>]
+#   -d, --purpose   One-line project purpose, e.g. "an order management API for   [default: "this service"]
+#                   e-commerce checkout" — threaded into the copied .claude/
+#                   agents/skills/commands so each subagent's system prompt
+#                   describes what the service is *for*, not just its tech stack.
 #       --force     Overwrite the target directory if it exists
 #       --no-git    Do not run `git init` in the new project
 #   -h, --help      Show this help
@@ -34,7 +38,7 @@ OLD_PACKAGE_PATH="com/anbit/archetype"
 OLD_GROUP="com.anbit"
 OLD_NAME="service-archetype"
 
-NAME="" GROUP="" PACKAGE="" OUTPUT="" FORCE=false DO_GIT=true
+NAME="" GROUP="" PACKAGE="" OUTPUT="" PURPOSE="" FORCE=false DO_GIT=true
 
 NAME_RE='^[a-z0-9]([a-z0-9-]*[a-z0-9])?$'
 PKG_RE='^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$'
@@ -60,6 +64,7 @@ while [[ $# -gt 0 ]]; do
     -g|--group)   GROUP="$2"; shift 2 ;;
     -p|--package) PACKAGE="$2"; shift 2 ;;
     -o|--output)  OUTPUT="$2"; shift 2 ;;
+    -d|--purpose) PURPOSE="$2"; shift 2 ;;
     --force)      FORCE=true; shift ;;
     --no-git)     DO_GIT=false; shift ;;
     -h|--help)    usage 0 ;;
@@ -95,12 +100,19 @@ if [[ -z "$OUTPUT" ]]; then
 fi
 PACKAGE_PATH="${PACKAGE//.//}"
 
+DEFAULT_PURPOSE="this service"
+if [[ -z "$PURPOSE" ]] && $INTERACTIVE; then
+  read -r -p "Project purpose, e.g. 'an order management API for e-commerce checkout' [$DEFAULT_PURPOSE]: " PURPOSE
+fi
+PURPOSE="${PURPOSE:-$DEFAULT_PURPOSE}"
+
 echo
 echo "Generating project:"
 echo "  name (artifactId): $NAME"
 echo "  groupId:           $GROUP"
 echo "  base package:      $PACKAGE"
 echo "  output:            $OUTPUT"
+echo "  purpose:           $PURPOSE"
 echo
 
 if $INTERACTIVE; then
@@ -138,12 +150,15 @@ done
 find "$OUTPUT/src/main/java" "$OUTPUT/src/test/java" -type d -empty -delete 2>/dev/null || true
 
 # ---- rewrite identifiers in every text file (order matters: longest/most-specific first) ----
+# search/replace are passed via env vars (not interpolated into the perl script string) so
+# free-form values like $PURPOSE can't break out of the quoting or inject shell commands.
 replace_in_tree() {
   local search="$1" replace="$2"
   # only touch text files; skip anything binary
   while IFS= read -r -d '' f; do
     if grep -Iq . "$f"; then
-      perl -i -pe "s{\Q${search}\E}{${replace}}g" "$f"
+      REPL_SEARCH="$search" REPL_REPLACE="$replace" \
+        perl -i -pe 's{\Q$ENV{REPL_SEARCH}\E}{$ENV{REPL_REPLACE}}g' "$f"
     fi
   done < <(find "$OUTPUT" -type f -print0)
 }
@@ -152,6 +167,7 @@ replace_in_tree "$OLD_PACKAGE"      "$PACKAGE"        # dotted package refs
 replace_in_tree "$OLD_PACKAGE_PATH" "$PACKAGE_PATH"   # slash package paths (docs, comments)
 replace_in_tree "$OLD_GROUP"        "$GROUP"          # Maven groupId
 replace_in_tree "$OLD_NAME"         "$NAME"           # artifactId + spring.application.name
+replace_in_tree "{{PROJECT_PURPOSE}}" "$PURPOSE"      # .claude/ agent & command system prompts
 
 # ---- optional: fresh git repo ----
 if $DO_GIT && command -v git >/dev/null 2>&1; then

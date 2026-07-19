@@ -9,8 +9,12 @@ mvn archetype:generate \
   -DarchetypeVersion=0.1.0
 ```
 
-You'll be prompted for the new project's `groupId`, `artifactId`, `version`, and `package`
-(or pass them with `-DgroupId=… -DartifactId=… -Dpackage=… -DinteractiveMode=false`). The
+You'll be prompted for the new project's `groupId`, `artifactId`, `version`, `package`, and
+`purpose` (a one-line description of what the service is for, e.g. "an order management API
+for e-commerce checkout" — threaded into the copied `.claude/` agent/skill/command system
+prompts, same as `scripts/new-project.sh --purpose`; defaults to "this service" if left
+blank). Or pass everything with
+`-DgroupId=… -DartifactId=… -Dpackage=… -Dpurpose=… -DinteractiveMode=false`. The
 result is a self-contained project that builds green out of the box (`./mvnw verify`).
 
 > Prefer no Maven setup? `scripts/new-project.sh` does the same thing as a shell command.

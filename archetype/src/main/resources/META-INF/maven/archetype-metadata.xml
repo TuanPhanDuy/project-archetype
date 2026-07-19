@@ -8,6 +8,11 @@
       (keep the original com/anbit/archetype path). The post-generate Groovy script does
       all renaming. This is what keeps ${...} and ## untouched.
     -->
+    <requiredProperties>
+        <requiredProperty key="purpose">
+            <defaultValue>this service</defaultValue>
+        </requiredProperty>
+    </requiredProperties>
     <fileSets>
         <fileSet filtered="false" packaged="false" encoding="UTF-8">
             <directory>src/main/java</directory>

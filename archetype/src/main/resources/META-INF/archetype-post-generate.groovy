@@ -9,6 +9,7 @@ def artifactId = request.artifactId
 def groupId    = request.groupId
 def version    = request.version
 def pkg        = request.package
+def purpose    = request.getProperties().getProperty('purpose', 'this service')
 def root       = new File(request.outputDirectory, artifactId)
 
 final OLD_PKG     = 'com.anbit.archetype'
@@ -16,6 +17,7 @@ final OLD_PKGPATH = 'com/anbit/archetype'
 final OLD_GROUP   = 'com.anbit'
 final OLD_NAME    = 'service-archetype'
 final OLD_VERSION = '0.1.0-SNAPSHOT'
+final PURPOSE_TOKEN = '{{PROJECT_PURPOSE}}'
 def pkgPath = pkg.replace('.', '/')
 
 // 1) Move Java sources from the old package path to the chosen package.
@@ -53,6 +55,7 @@ root.eachFileRecurse { f ->
             .replace(OLD_GROUP, groupId)
             .replace(OLD_NAME, artifactId)
             .replace(OLD_VERSION, version)
+            .replace(PURPOSE_TOKEN, purpose)
     if (out != text) f.setText(out, 'UTF-8')
 }
 
