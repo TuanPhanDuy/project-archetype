@@ -55,8 +55,10 @@ class OrderControllerIT {
     void createsOrderSynchronouslyWithComputedTotal() {
         UUID productId = createProduct("Sync Widget", "12.50");
 
+        CreateOrderRequest request =
+                new CreateOrderRequest("Grace", List.of(new CreateOrderRequest.Item(productId, 3)));
         OrderResponse order = client.post().uri("/api/v1/orders")
-                .body(new CreateOrderRequest("Grace", List.of(new CreateOrderRequest.Item(productId, 3))))
+                .body(request)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(OrderResponse.class)
@@ -71,8 +73,10 @@ class OrderControllerIT {
     @Test
     void fulfillsOrderAsynchronouslyAndPollsJobToCompletion() {
         UUID productId = createProduct("Async Widget", "5.00");
+        CreateOrderRequest request =
+                new CreateOrderRequest("Linus", List.of(new CreateOrderRequest.Item(productId, 2)));
         OrderResponse order = client.post().uri("/api/v1/orders")
-                .body(new CreateOrderRequest("Linus", List.of(new CreateOrderRequest.Item(productId, 2))))
+                .body(request)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(OrderResponse.class)
@@ -89,12 +93,14 @@ class OrderControllerIT {
         assertThat(job.status()).isIn(JobStatus.PENDING, JobStatus.RUNNING);
 
         // Poll the job until the background worker finishes.
-        await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofMillis(100)).untilAsserted(() ->
-                client.get().uri("/api/v1/jobs/{id}", job.id())
-                        .exchange()
-                        .expectStatus().isOk()
-                        .expectBody()
-                        .jsonPath("$.status").isEqualTo("COMPLETED"));
+        await().atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(100))
+                .untilAsserted(() ->
+                        client.get().uri("/api/v1/jobs/{id}", job.id())
+                                .exchange()
+                                .expectStatus().isOk()
+                                .expectBody()
+                                .jsonPath("$.status").isEqualTo("COMPLETED"));
 
         // The order reflects the completed async work.
         client.get().uri("/api/v1/orders/{id}", order.id())

@@ -53,7 +53,8 @@ class OrderServiceTest {
     @Mock
     IdempotencyKeyRepository idempotencyKeyRepository;
 
-    private final Clock fixedClock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
+    private final Clock fixedClock =
+            Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
 
     /**
      * Builds a real {@code OrderService} wired to the mocks above. {@code self} is the
@@ -64,7 +65,12 @@ class OrderServiceTest {
      */
     private OrderService newService() {
         OrderService service = new OrderService(
-                orderRepository, productRepository, idempotencyKeyRepository, fixedClock, new SimpleMeterRegistry(), null);
+                orderRepository,
+                productRepository,
+                idempotencyKeyRepository,
+                fixedClock,
+                new SimpleMeterRegistry(),
+                null);
         ReflectionTestUtils.setField(service, "self", service);
         return service;
     }
@@ -79,13 +85,25 @@ class OrderServiceTest {
         }
     }
 
+    /** A $10.00 product named "Widget" — the default product fixture used across these tests. */
+    private Product widget(UUID id) {
+        return new Product(id, "Widget", null, new BigDecimal("10.00"), fixedClock.instant());
+    }
+
+    /** A single-item order request: one {@code quantity} of {@code productId}. */
+    private static CreateOrderRequest orderRequest(
+            String customerName, UUID productId, int quantity) {
+        CreateOrderRequest.Item item = new CreateOrderRequest.Item(productId, quantity);
+        return new CreateOrderRequest(customerName, List.of(item));
+    }
+
     @Test
     void createComputesTotalFromLineItems() {
         UUID widgetId = UUID.randomUUID();
         UUID gadgetId = UUID.randomUUID();
-        Product widget = new Product(widgetId, "Widget", null, new BigDecimal("10.00"), fixedClock.instant());
-        Product gadget = new Product(gadgetId, "Gadget", null, new BigDecimal("2.50"), fixedClock.instant());
-        when(productRepository.findById(widgetId)).thenReturn(Optional.of(widget));
+        Product gadget =
+                new Product(gadgetId, "Gadget", null, new BigDecimal("2.50"), fixedClock.instant());
+        when(productRepository.findById(widgetId)).thenReturn(Optional.of(widget(widgetId)));
         when(productRepository.findById(gadgetId)).thenReturn(Optional.of(gadget));
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -103,8 +121,7 @@ class OrderServiceTest {
         UUID missing = UUID.randomUUID();
         when(productRepository.findById(missing)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> newService().create(
-                new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(missing, 1))), null))
+        assertThatThrownBy(() -> newService().create(orderRequest("Ada", missing, 1), null))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(missing.toString());
     }
@@ -114,13 +131,13 @@ class OrderServiceTest {
     @Test
     void createWithNewIdempotencyKeyPersistsOrderAndIdempotencyRow() {
         UUID productId = UUID.randomUUID();
-        Product product = new Product(productId, "Widget", null, new BigDecimal("10.00"), fixedClock.instant());
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(widget(productId)));
         when(orderRepository.saveAndFlush(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(idempotencyKeyRepository.findById("new-key")).thenReturn(Optional.empty());
-        when(idempotencyKeyRepository.saveAndFlush(any(IdempotencyKey.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(idempotencyKeyRepository.saveAndFlush(any(IdempotencyKey.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        CreateOrderRequest request = new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 1)));
+        CreateOrderRequest request = orderRequest("Ada", productId, 1);
         Order order = newService().create(request, "new-key");
 
         assertThat(order.getCustomerName()).isEqualTo("Ada");
@@ -137,9 +154,10 @@ class OrderServiceTest {
     @Test
     void replayWithSameKeyAndSameBodyReturnsCurrentStateWithoutDuplicatePersist() {
         UUID productId = UUID.randomUUID();
-        CreateOrderRequest request = new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 1)));
+        CreateOrderRequest request = orderRequest("Ada", productId, 1);
         UUID orderId = UUID.randomUUID();
-        IdempotencyKey stored = new IdempotencyKey("replay-key", computeHash(request), orderId, fixedClock.instant());
+        IdempotencyKey stored = new IdempotencyKey(
+                "replay-key", computeHash(request), orderId, fixedClock.instant());
         when(idempotencyKeyRepository.findById("replay-key")).thenReturn(Optional.of(stored));
 
         // The order's state has moved on since it was created (e.g. the async worker started
@@ -162,10 +180,10 @@ class OrderServiceTest {
     @Test
     void replayWithDifferentBodyThrowsConflictAndDoesNotPersist() {
         UUID productId = UUID.randomUUID();
-        CreateOrderRequest original = new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 1)));
-        CreateOrderRequest different = new CreateOrderRequest("Bella", List.of(new CreateOrderRequest.Item(productId, 5)));
-        IdempotencyKey stored =
-                new IdempotencyKey("conflict-key", computeHash(original), UUID.randomUUID(), fixedClock.instant());
+        CreateOrderRequest original = orderRequest("Ada", productId, 1);
+        CreateOrderRequest different = orderRequest("Bella", productId, 5);
+        IdempotencyKey stored = new IdempotencyKey(
+                "conflict-key", computeHash(original), UUID.randomUUID(), fixedClock.instant());
         when(idempotencyKeyRepository.findById("conflict-key")).thenReturn(Optional.of(stored));
 
         assertThatThrownBy(() -> newService().create(different, "conflict-key"))
@@ -176,16 +194,16 @@ class OrderServiceTest {
         verify(idempotencyKeyRepository, never()).saveAndFlush(any());
     }
 
-    // ---- Idempotency-Key: AC4 (race-loser retry path; genuine concurrency is covered by the IT) ----
+    // ---- Idempotency-Key: AC4 (race-loser retry path; concurrency itself covered by the IT) ----
 
     @Test
     void createRetriesAndReturnsRaceWinnerWhenIdempotencyInsertLosesUniqueConstraint() {
         UUID productId = UUID.randomUUID();
-        Product product = new Product(productId, "Widget", null, new BigDecimal("10.00"), fixedClock.instant());
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-        CreateOrderRequest request = new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 1)));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(widget(productId)));
+        CreateOrderRequest request = orderRequest("Ada", productId, 1);
         UUID winnerOrderId = UUID.randomUUID();
-        IdempotencyKey winnerKey = new IdempotencyKey("race-key", computeHash(request), winnerOrderId, fixedClock.instant());
+        IdempotencyKey winnerKey = new IdempotencyKey(
+                "race-key", computeHash(request), winnerOrderId, fixedClock.instant());
         Order winnerOrder = new Order(winnerOrderId, "Ada", fixedClock.instant());
 
         // First lookup misses (nobody has claimed the key yet); this thread then loses the
@@ -194,7 +212,8 @@ class OrderServiceTest {
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.of(winnerKey));
         when(orderRepository.saveAndFlush(any(Order.class)))
-                .thenThrow(new DataIntegrityViolationException("duplicate key value violates unique constraint"));
+                .thenThrow(new DataIntegrityViolationException(
+                        "duplicate key value violates unique constraint"));
         when(orderRepository.findWithItemsById(winnerOrderId)).thenReturn(Optional.of(winnerOrder));
 
         Order result = newService().create(request, "race-key");
@@ -209,12 +228,10 @@ class OrderServiceTest {
     @Test
     void blankIdempotencyKeyBehavesLikeNoKey() {
         UUID productId = UUID.randomUUID();
-        Product product = new Product(productId, "Widget", null, new BigDecimal("10.00"), fixedClock.instant());
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(widget(productId)));
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Order order = newService().create(
-                new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 1))), "   ");
+        Order order = newService().create(orderRequest("Ada", productId, 1), "   ");
 
         assertThat(order.getCustomerName()).isEqualTo("Ada");
         verifyNoInteractions(idempotencyKeyRepository);
@@ -227,10 +244,10 @@ class OrderServiceTest {
     @Test
     void hashIsDeterministicForIdenticalRequestsAndDiffersForDifferentOnes() {
         UUID productId = UUID.randomUUID();
-        CreateOrderRequest a = new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 2)));
-        CreateOrderRequest sameValues = new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 2)));
-        CreateOrderRequest differentQty = new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 3)));
-        CreateOrderRequest differentName = new CreateOrderRequest("Bella", List.of(new CreateOrderRequest.Item(productId, 2)));
+        CreateOrderRequest a = orderRequest("Ada", productId, 2);
+        CreateOrderRequest sameValues = orderRequest("Ada", productId, 2);
+        CreateOrderRequest differentQty = orderRequest("Ada", productId, 3);
+        CreateOrderRequest differentName = orderRequest("Bella", productId, 2);
 
         String hashA = computeHash(a);
 

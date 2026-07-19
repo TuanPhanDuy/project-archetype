@@ -44,7 +44,8 @@ public class CategoryController {
     public ResponseEntity<CategoryResponse> create(
             @Valid @RequestBody CategoryRequest request, UriComponentsBuilder uriBuilder) {
         Category created = service.create(request);
-        URI location = uriBuilder.path("/api/v1/categories/{id}").buildAndExpand(created.getId()).toUri();
+        URI location =
+                uriBuilder.path("/api/v1/categories/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(location).body(CategoryResponse.from(created));
     }
 }

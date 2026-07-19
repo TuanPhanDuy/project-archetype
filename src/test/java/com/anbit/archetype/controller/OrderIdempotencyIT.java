@@ -74,7 +74,7 @@ class OrderIdempotencyIT {
         return product.id();
     }
 
-    // ---- AC1: new key + valid body -> 201, exactly one orders row and one idempotency_key row ----
+    // ---- AC1: new key + valid body -> 201, one orders row and one idempotency_key row ----
 
     @Test
     void newIdempotencyKeyCreatesOrderAndIdempotencyRow() {
@@ -82,10 +82,12 @@ class OrderIdempotencyIT {
         String key = UUID.randomUUID().toString();
         long ordersBefore = orderRepository.count();
         long keysBefore = idempotencyKeyRepository.count();
+        CreateOrderRequest body =
+                new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 1)));
 
         OrderResponse order = client.post().uri("/api/v1/orders")
                 .header("Idempotency-Key", key)
-                .body(new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 1))))
+                .body(body)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(OrderResponse.class)
@@ -98,13 +100,15 @@ class OrderIdempotencyIT {
                 .get().satisfies(row -> assertThat(row.getOrderId()).isEqualTo(order.id()));
     }
 
-    // ---- AC2: replay with same key + same body -> same order id/Location, current state, no duplicate rows ----
+    // ---- AC2: replay with same key + same body -> same order id/Location, current state,
+    // no duplicate rows ----
 
     @Test
     void replayingSameKeyAndBodyReturnsCurrentStateNotFrozenCopy() {
         UUID productId = createProduct("Replay Widget", "15.00");
         String key = UUID.randomUUID().toString();
-        CreateOrderRequest body = new CreateOrderRequest("Grace", List.of(new CreateOrderRequest.Item(productId, 2)));
+        CreateOrderRequest body =
+                new CreateOrderRequest("Grace", List.of(new CreateOrderRequest.Item(productId, 2)));
         long ordersBefore = orderRepository.count();
         long keysBefore = idempotencyKeyRepository.count();
 
@@ -152,19 +156,23 @@ class OrderIdempotencyIT {
         UUID productId = createProduct("Conflict Widget", "8.00");
         UUID otherProductId = createProduct("Other Conflict Widget", "3.00");
         String key = UUID.randomUUID().toString();
+        CreateOrderRequest originalBody =
+                new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 1)));
 
         OrderResponse original = client.post().uri("/api/v1/orders")
                 .header("Idempotency-Key", key)
-                .body(new CreateOrderRequest("Ada", List.of(new CreateOrderRequest.Item(productId, 1))))
+                .body(originalBody)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(OrderResponse.class)
                 .returnResult().getResponseBody();
         assertThat(original).isNotNull();
 
+        CreateOrderRequest conflictingBody = new CreateOrderRequest(
+                "Bella", List.of(new CreateOrderRequest.Item(otherProductId, 5)));
         byte[] raw = client.post().uri("/api/v1/orders")
                 .header("Idempotency-Key", key)
-                .body(new CreateOrderRequest("Bella", List.of(new CreateOrderRequest.Item(otherProductId, 5))))
+                .body(conflictingBody)
                 .exchange()
                 .expectStatus().isEqualTo(409)
                 .expectBody()
@@ -191,7 +199,8 @@ class OrderIdempotencyIT {
     void concurrentRequestsWithSameNewKeyPersistExactlyOneOrder() throws Exception {
         UUID productId = createProduct("Race Widget", "9.99");
         String key = UUID.randomUUID().toString();
-        CreateOrderRequest body = new CreateOrderRequest("Racer", List.of(new CreateOrderRequest.Item(productId, 1)));
+        CreateOrderRequest body =
+                new CreateOrderRequest("Racer", List.of(new CreateOrderRequest.Item(productId, 1)));
 
         long ordersBefore = orderRepository.count();
         long keysBefore = idempotencyKeyRepository.count();
@@ -237,7 +246,8 @@ class OrderIdempotencyIT {
 
         assertThat(orderRepository.count()).isEqualTo(ordersBefore + 1);
         assertThat(idempotencyKeyRepository.count()).isEqualTo(keysBefore + 1);
-        assertThat(meterRegistry.get("orders.placed").counter().count()).isEqualTo(placedBefore + 1.0);
+        double placedAfter = meterRegistry.get("orders.placed").counter().count();
+        assertThat(placedAfter).isEqualTo(placedBefore + 1.0);
     }
 
     // ---- AC5: no header / blank / whitespace-only header behave like no idempotency tracking ----
@@ -246,9 +256,11 @@ class OrderIdempotencyIT {
     void noHeaderCreatesOrderWithoutIdempotencyTracking() {
         UUID productId = createProduct("No Header Widget", "4.00");
         long keysBefore = idempotencyKeyRepository.count();
+        CreateOrderRequest.Item item = new CreateOrderRequest.Item(productId, 1);
+        CreateOrderRequest body = new CreateOrderRequest("NoHeader", List.of(item));
 
         client.post().uri("/api/v1/orders")
-                .body(new CreateOrderRequest("NoHeader", List.of(new CreateOrderRequest.Item(productId, 1))))
+                .body(body)
                 .exchange()
                 .expectStatus().isCreated();
 
@@ -258,7 +270,8 @@ class OrderIdempotencyIT {
     @Test
     void blankOrWhitespaceIdempotencyKeyBehavesLikeNoKeyAndDoesNotDedupe() {
         UUID productId = createProduct("Blank Header Widget", "4.00");
-        CreateOrderRequest body = new CreateOrderRequest("Blanky", List.of(new CreateOrderRequest.Item(productId, 1)));
+        CreateOrderRequest.Item item = new CreateOrderRequest.Item(productId, 1);
+        CreateOrderRequest body = new CreateOrderRequest("Blanky", List.of(item));
         long keysBefore = idempotencyKeyRepository.count();
 
         OrderResponse first = client.post().uri("/api/v1/orders")
@@ -288,10 +301,12 @@ class OrderIdempotencyIT {
     void idempotencyKeyOver255CharsReturns400Validation() {
         UUID productId = createProduct("Too Long Key Widget", "4.00");
         String tooLong = "a".repeat(256);
+        CreateOrderRequest.Item item = new CreateOrderRequest.Item(productId, 1);
+        CreateOrderRequest body = new CreateOrderRequest("TooLong", List.of(item));
 
         client.post().uri("/api/v1/orders")
                 .header("Idempotency-Key", tooLong)
-                .body(new CreateOrderRequest("TooLong", List.of(new CreateOrderRequest.Item(productId, 1))))
+                .body(body)
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()

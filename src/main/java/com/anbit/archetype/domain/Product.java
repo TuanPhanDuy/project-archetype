@@ -51,7 +51,12 @@ public class Product {
         // Required by JPA.
     }
 
-    public Product(UUID id, String name, @Nullable String description, BigDecimal price, Instant createdAt) {
+    public Product(
+            UUID id,
+            String name,
+            @Nullable String description,
+            BigDecimal price,
+            Instant createdAt) {
         this.id = id;
         this.name = name;
         this.description = description;

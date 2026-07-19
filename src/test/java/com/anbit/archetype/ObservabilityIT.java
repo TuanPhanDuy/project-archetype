@@ -50,8 +50,10 @@ class ObservabilityIT {
                 .body(new ProductRequest("Metric Widget", null, new BigDecimal("1.00"), null))
                 .exchange().expectStatus().isCreated()
                 .expectBody(ProductResponse.class).returnResult().getResponseBody().id();
+        CreateOrderRequest.Item item = new CreateOrderRequest.Item(productId, 1);
+        CreateOrderRequest order = new CreateOrderRequest("Metrics", List.of(item));
         client.post().uri("/api/v1/orders")
-                .body(new CreateOrderRequest("Metrics", List.of(new CreateOrderRequest.Item(productId, 1))))
+                .body(order)
                 .exchange().expectStatus().isCreated();
 
         String body = client.get().uri("/actuator/prometheus")

@@ -67,12 +67,14 @@ public class ProductController {
     public ResponseEntity<ProductResponse> create(
             @Valid @RequestBody ProductRequest request, UriComponentsBuilder uriBuilder) {
         Product created = service.create(request);
-        URI location = uriBuilder.path("/api/v1/products/{id}").buildAndExpand(created.getId()).toUri();
+        URI location =
+                uriBuilder.path("/api/v1/products/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(location).body(ProductResponse.from(created));
     }
 
     @PutMapping("/{id}")
-    public ProductResponse update(@PathVariable UUID id, @Valid @RequestBody ProductRequest request) {
+    public ProductResponse update(
+            @PathVariable UUID id, @Valid @RequestBody ProductRequest request) {
         return ProductResponse.from(service.update(id, request));
     }
 

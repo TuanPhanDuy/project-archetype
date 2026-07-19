@@ -34,7 +34,8 @@ public class CategoryService {
 
     @Transactional
     public Category create(CategoryRequest request) {
-        Category category = new Category(UUID.randomUUID(), request.name(), request.description(), clock.instant());
+        Category category = new Category(
+                UUID.randomUUID(), request.name(), request.description(), clock.instant());
         return repository.save(category);
     }
 }

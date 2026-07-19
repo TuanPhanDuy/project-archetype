@@ -42,7 +42,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
-        return problem(HttpStatus.NOT_FOUND, "Resource not found", "resource-not-found", ex.getMessage());
+        return problem(
+                HttpStatus.NOT_FOUND, "Resource not found", "resource-not-found", ex.getMessage());
     }
 
     @ExceptionHandler(IdempotencyKeyConflictException.class)
@@ -93,7 +94,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+            MethodArgumentNotValidException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
         ProblemDetail problem = ex.getBody();
         problem.setTitle("Validation failed");
         problem.setType(type("validation"));
@@ -109,13 +113,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleHandlerMethodValidationException(
-            HandlerMethodValidationException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+            HandlerMethodValidationException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
         ProblemDetail problem = ex.getBody();
         problem.setTitle("Validation failed");
         problem.setType(type("validation"));
         problem.setProperty("errors", ex.getParameterValidationResults().stream()
                 .flatMap(result -> result.getResolvableErrors().stream()
-                        .map(err -> result.getMethodParameter().getParameterName() + ": " + err.getDefaultMessage()))
+                        .map(err -> result.getMethodParameter().getParameterName()
+                                + ": " + err.getDefaultMessage()))
                 .toList());
         return super.handleExceptionInternal(ex, problem, headers, status, request);
     }
@@ -124,7 +132,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
-            Exception ex, @Nullable Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
+            Exception ex,
+            @Nullable Object body,
+            HttpHeaders headers,
+            HttpStatusCode statusCode,
+            WebRequest request) {
         if (body instanceof ProblemDetail problem) {
             Map<String, Object> props = problem.getProperties();
             if (props == null || !props.containsKey("timestamp")) {
@@ -134,7 +146,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return super.handleExceptionInternal(ex, body, headers, statusCode, request);
     }
 
-    private ProblemDetail problem(HttpStatus status, String title, String typeSlug, @Nullable String detail) {
+    private ProblemDetail problem(
+            HttpStatus status, String title, String typeSlug, @Nullable String detail) {
         ProblemDetail problem = (detail != null)
                 ? ProblemDetail.forStatusAndDetail(status, detail)
                 : ProblemDetail.forStatus(status);

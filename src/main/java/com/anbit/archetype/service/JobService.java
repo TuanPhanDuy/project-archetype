@@ -34,7 +34,8 @@ public class JobService {
 
     @Transactional
     public ProcessingJob create(JobType type, @Nullable UUID referenceId) {
-        ProcessingJob job = new ProcessingJob(UUID.randomUUID(), type, referenceId, clock.instant());
+        ProcessingJob job =
+                new ProcessingJob(UUID.randomUUID(), type, referenceId, clock.instant());
         return repository.save(job);
     }
 

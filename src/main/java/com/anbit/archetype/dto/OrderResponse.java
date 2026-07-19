@@ -17,7 +17,12 @@ public record OrderResponse(
         Instant createdAt,
         List<Item> items) {
 
-    public record Item(UUID productId, String productName, int quantity, BigDecimal unitPrice, BigDecimal lineTotal) {
+    public record Item(
+            UUID productId,
+            String productName,
+            int quantity,
+            BigDecimal unitPrice,
+            BigDecimal lineTotal) {
 
         static Item from(OrderItem item) {
             return new Item(

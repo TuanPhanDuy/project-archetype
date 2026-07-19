@@ -38,7 +38,8 @@ class ProductControllerIT {
 
     @Test
     void createsAndFetchesProduct() {
-        ProductRequest request = new ProductRequest("Widget", "A useful widget", new BigDecimal("19.99"), null);
+        ProductRequest request =
+                new ProductRequest("Widget", "A useful widget", new BigDecimal("19.99"), null);
 
         ProductResponse created = client.post().uri("/api/v1/products")
                 .body(request)

@@ -1,4 +1,4 @@
-/** Dto layer. */
+/** DTO layer. */
 @NullMarked
 package com.anbit.archetype.dto;
 

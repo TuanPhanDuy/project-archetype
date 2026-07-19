@@ -26,7 +26,8 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final Clock clock;
 
-    public ProductService(ProductRepository repository, CategoryRepository categoryRepository, Clock clock) {
+    public ProductService(
+            ProductRepository repository, CategoryRepository categoryRepository, Clock clock) {
         this.repository = repository;
         this.categoryRepository = categoryRepository;
         this.clock = clock;

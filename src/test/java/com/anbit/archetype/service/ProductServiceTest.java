@@ -34,14 +34,16 @@ class ProductServiceTest {
     @Mock
     CategoryRepository categoryRepository;
 
-    private final Clock fixedClock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
+    private final Clock fixedClock =
+            Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
 
     @Test
     void createPersistsProductWithGeneratedId() {
         when(repository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
         ProductService service = new ProductService(repository, categoryRepository, fixedClock);
+        ProductRequest request = new ProductRequest("Gadget", null, new BigDecimal("5.00"), null);
 
-        Product result = service.create(new ProductRequest("Gadget", null, new BigDecimal("5.00"), null));
+        Product result = service.create(request);
 
         assertThat(result.getId()).isNotNull();
         assertThat(result.getName()).isEqualTo("Gadget");

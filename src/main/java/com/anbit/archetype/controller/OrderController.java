@@ -51,7 +51,10 @@ public class OrderController {
     private final FulfillmentService fulfillmentService;
     private final JobService jobService;
 
-    public OrderController(OrderService orderService, FulfillmentService fulfillmentService, JobService jobService) {
+    public OrderController(
+            OrderService orderService,
+            FulfillmentService fulfillmentService,
+            JobService jobService) {
         this.orderService = orderService;
         this.fulfillmentService = fulfillmentService;
         this.jobService = jobService;
@@ -78,15 +81,18 @@ public class OrderController {
     public ResponseEntity<OrderResponse> create(
             @Valid @RequestBody CreateOrderRequest request,
             @Parameter(
-                    description = "Optional client-generated key for safely retrying this exact request. "
-                            + "Reusing the same key with the same body returns the original order instead of "
-                            + "creating a duplicate; reusing it with a different body is rejected.",
+                    description = "Optional client-generated key for safely retrying this exact "
+                            + "request. Reusing the same key with the same body returns the "
+                            + "original order instead of creating a duplicate; reusing it with a "
+                            + "different body is rejected.",
                     example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
             @RequestHeader(value = "Idempotency-Key", required = false)
-            @Size(max = 255, message = "must be at most 255 characters") @Nullable String idempotencyKey,
+            @Size(max = 255, message = "must be at most 255 characters")
+            @Nullable String idempotencyKey,
             UriComponentsBuilder uriBuilder) {
         Order created = orderService.create(request, idempotencyKey);
-        URI location = uriBuilder.path("/api/v1/orders/{id}").buildAndExpand(created.getId()).toUri();
+        URI location =
+                uriBuilder.path("/api/v1/orders/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(location).body(OrderResponse.from(created));
     }
 
@@ -95,13 +101,15 @@ public class OrderController {
      * before the background task starts, so the returned id is always pollable.
      */
     @PostMapping("/{id}/fulfillment")
-    public ResponseEntity<JobResponse> fulfill(@PathVariable UUID id, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<JobResponse> fulfill(
+            @PathVariable UUID id, UriComponentsBuilder uriBuilder) {
         orderService.findById(id); // 404 fast if the order doesn't exist
         ProcessingJob job = jobService.create(JobType.ORDER_FULFILLMENT, id);
         orderService.markFulfilling(id);
         fulfillmentService.process(job.getId(), id);
 
-        URI jobLocation = uriBuilder.path("/api/v1/jobs/{jobId}").buildAndExpand(job.getId()).toUri();
+        URI jobLocation =
+                uriBuilder.path("/api/v1/jobs/{jobId}").buildAndExpand(job.getId()).toUri();
         return ResponseEntity.accepted().location(jobLocation).body(JobResponse.from(job));
     }
 }

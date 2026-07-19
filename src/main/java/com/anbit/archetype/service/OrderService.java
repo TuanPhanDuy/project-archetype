@@ -56,9 +56,13 @@ public class OrderService {
     // constructor circular-dependency this would otherwise create.
     private final OrderService self;
 
-    public OrderService(OrderRepository repository, ProductRepository productRepository,
-                        IdempotencyKeyRepository idempotencyKeyRepository, Clock clock, MeterRegistry meterRegistry,
-                        @Lazy OrderService self) {
+    public OrderService(
+            OrderRepository repository,
+            ProductRepository productRepository,
+            IdempotencyKeyRepository idempotencyKeyRepository,
+            Clock clock,
+            MeterRegistry meterRegistry,
+            @Lazy OrderService self) {
         this.repository = repository;
         this.productRepository = productRepository;
         this.idempotencyKeyRepository = idempotencyKeyRepository;
@@ -125,9 +129,12 @@ public class OrderService {
      * so a caller never sees the metric bumped for an order that got rolled back.
      */
     @Transactional
-    public Order persistNewOrderWithIdempotencyKey(CreateOrderRequest request, String key, String requestHash) {
+    public Order persistNewOrderWithIdempotencyKey(
+            CreateOrderRequest request, String key, String requestHash) {
         Order saved = repository.saveAndFlush(buildOrder(request));
-        idempotencyKeyRepository.saveAndFlush(new IdempotencyKey(key, requestHash, saved.getId(), clock.instant()));
+        IdempotencyKey idempotencyKey =
+                new IdempotencyKey(key, requestHash, saved.getId(), clock.instant());
+        idempotencyKeyRepository.saveAndFlush(idempotencyKey);
         ordersCreated.increment();
         return saved;
     }
