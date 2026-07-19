@@ -45,6 +45,22 @@ vcs:
   #   agents/environments without `gh` installed). See .env.example for its token.
   auto_merge_requires: [code-reviewer:APPROVE, security-auditor:PASS]   # any qualifier blocks it
 
+# ---- Review iteration cap: prevents an unbounded dev<->review loop. A "round" is one
+# rejection — Code Review REQUEST CHANGES, Security Review BLOCK, or Team Lead NOT
+# APPROVED — against essentially the same diff. The counter is shared across all three,
+# not per-phase, since they're all "review found a problem, go fix it" cycles on the same
+# piece of work. ----
+review_iteration_limit: 3
+review_iteration_policy: >
+  After this many rounds without a clean verdict, stop auto-looping back to the dev phase.
+  The next round is an escalation, not another fix-and-re-review cycle: compile every
+  round's findings into one report (what's been tried, what's still failing, and why the
+  same class of issue keeps recurring) and hand it to a human — via `scrum-master`, or as
+  a PR comment (see `.claude/commands/review-pr.md`) — instead of dispatching another
+  automatic fix attempt. `team-lead` enforces this at the final gate; `code-reviewer` and
+  `security-auditor` should say plainly which round their verdict is when it's not the
+  first.
+
 # ---- The team: each role maps to a Claude Code subagent in .claude/agents/ ----
 roles:
   - id: product-owner
@@ -67,10 +83,21 @@ roles:
     title: Solution Architect
     agent: solution-architect
     skill: API contract, data model, component design, work breakdown.
-  - id: spring-developer
-    title: Backend Engineer
-    agent: spring-developer
-    skill: Implementation on the archetype's conventions.
+  - id: work-planner
+    title: Work Planner
+    agent: work-planner
+    skill: >
+      Splits an agreed design into independent work packages, dispatches each to the
+      right specialist agent (senior-developer/test-engineer/devops-engineer) in
+      parallel where safe, merges the results, and reports status to scrum-master.
+      Optional — only for stories wide enough that this beats one engineer working
+      serially.
+  - id: senior-developer
+    title: Senior Developer
+    agent: senior-developer
+    skill: >
+      Implementation, including decisions the design leaves open; not limited to the
+      Spring Boot/Java stack.
   - id: test-engineer
     title: QA / Test Engineer
     agent: test-engineer
@@ -125,7 +152,64 @@ ceremonies:
     cadence: end of every sprint
     purpose: What went well / what to improve, with concrete, owned action items.
 
-# ---- Lifecycle phases for a single work item, in order. Small items may skip phases. ----
+# ---- Task classification: not every item needs the full pipeline. Classify a task into
+# one of these tiers before choosing which phases actually run (see workflow_profiles
+# below) — requirements-analyst assigns the tier as part of its phase-1 output (see
+# .claude/agents/requirements-analyst.md). Re-classify immediately if new information
+# contradicts the assigned tier during any later phase; never keep the lighter gates once
+# a task turns out riskier than first thought. ----
+task_classification:
+  owner: requirements-analyst
+  tiers:
+    - id: fast_path
+      name: Fast Path (low risk)
+      criteria: >
+        No schema/migration change; no new external dependency; doesn't touch
+        authn/authz, payment, or PII-handling code; single, tightly-scoped change
+        (roughly one class/file or equivalent); existing test patterns already cover
+        the shape of the change.
+      examples: >
+        Copy/doc fix, config value tweak, dependency patch bump, log/observability
+        tweak, adding a read-only GET endpoint with no new persistence.
+    - id: standard
+      name: Standard (default)
+      criteria: Anything that doesn't clearly qualify as Fast Path or High Risk.
+    - id: high_risk
+      name: High Risk
+      criteria: >
+        Touches authn/authz, payment/money, or PII/data-retention logic; a backward-
+        incompatible API or schema change; a new external dependency/integration or
+        cross-service contract change; or is explicitly flagged by product-owner or
+        requirements-analyst regardless of size.
+
+# ---- Workflow profiles: the ordered phase list each tier actually runs. A phase not
+# listed for a tier is skipped outright, not just "informal" — its normal outputs must
+# still exist by the time a later phase needs them (e.g. Fast Path skips Design, so
+# Requirements' acceptance criteria must be unambiguous enough to implement directly
+# against, with no design gap left for the implementer to guess at). ----
+workflow_profiles:
+  fast_path:
+    phases: [requirements, implementation, testing, code_review, team_lead_approval, release]
+    definition_of_done: fast_path
+    notes: >
+      Skips Design, Work Planning, and Security Review as separate phases. code_review
+      absorbs a lightweight security spot-check instead (see
+      .claude/agents/code-reviewer.md) — if it flags anything security-relevant, stop
+      and re-classify to at least Standard rather than approving around it.
+  standard:
+    phases: [requirements, design, work_planning, implementation, testing, code_review, security_review, team_lead_approval, release]
+    definition_of_done: standard
+  high_risk:
+    phases: [requirements, design, work_planning, implementation, testing, code_review, security_review, team_lead_approval, release]
+    definition_of_done: high_risk
+    notes: >
+      Same phases as Standard; every gate is stricter — see the high_risk definition of
+      done. Security Review must return an unqualified PASS to proceed ("PASS WITH
+      RECOMMENDATIONS" does not auto-continue), and Team Lead explicitly re-verifies
+      non-functionals, not just acceptance criteria.
+
+# ---- Lifecycle phases for a single work item, in order. Which ones actually run for a
+# given task is set by its classification — see workflow_profiles above. ----
 phases:
   - id: requirements
     name: Requirements
@@ -138,14 +222,32 @@ phases:
   - id: design
     name: Design
     owner: solution-architect
+    # Not run for the fast_path profile — see workflow_profiles.
     inputs: [requirements]
     outputs: [API contract, data model / Flyway plan, work breakdown]
     entry_gate: Requirements exit_gate met.
     exit_gate: Every requirement maps to a designed component; work breakdown is executable.
 
+  - id: work_planning
+    name: Work Planning & Orchestration
+    owner: work-planner
+    optional: true   # skip straight to Implementation for small/atomic changes; also not
+                      # run for the fast_path profile — see workflow_profiles.
+    inputs: [design, work breakdown]
+    outputs: [independent work packages, dependency graph, dispatched + merged changes, status report to scrum-master]
+    entry_gate: Design exit_gate met; the work is wide enough that parallel dispatch is worth the coordination cost.
+    exit_gate: >
+      Every requirement maps to a package; parallel-safe packages share no files/symbols/
+      migrations; sequential packages have an explicit required order; every dispatched
+      package is merged, verified, and its status reported to scrum-master.
+    # When this phase runs, work-planner dispatches senior-developer/test-engineer/
+    # devops-engineer itself (see .claude/agents/work-planner.md) — it drives Implementation
+    # and Testing below directly, rather than each being invoked separately by a human.
+
   - id: implementation
     name: Implementation
-    owner: spring-developer
+    owner: senior-developer
+    driven_by: work-planner, when Work Planning ran (optional)
     inputs: [design, work breakdown]
     outputs: [code changes]
     entry_gate: Design exit_gate met.
@@ -154,6 +256,7 @@ phases:
   - id: testing
     name: Testing
     owner: test-engineer
+    driven_by: work-planner, when Work Planning ran (optional)
     inputs: [acceptance criteria, code changes]
     outputs: [unit + Testcontainers integration tests]
     entry_gate: Implementation exit_gate met.
@@ -172,6 +275,8 @@ phases:
   - id: security_review
     name: Security Review
     owner: security-auditor
+    # Not run for the fast_path profile — code_review's lightweight security spot-check
+    # substitutes; see workflow_profiles.
     parallel_with: [code_review]
     command: /review-pr <pr-number>
     inputs: [git diff, touched surfaces]
@@ -187,7 +292,9 @@ phases:
     owner: team-lead
     inputs: [requirements, all prior phase verdicts]
     outputs: [go/no-go verdict]
-    entry_gate: Code Review and Security Review exit_gates met.
+    entry_gate: >
+      Code Review exit_gate met, and Security Review's too for any tier that runs it
+      (check the task's workflow_profile, don't assume Standard).
     exit_gate: "Verdict is APPROVED FOR MERGE — acceptance criteria genuinely met and every prior gate verified, not just claimed."
 
   - id: release
@@ -198,15 +305,38 @@ phases:
     entry_gate: Team Lead Approval exit_gate met.
     exit_gate: CI green; native/JVM image builds; observability wired.
 
-# ---- Cross-cutting definition of done ----
+# ---- Definition of done, per tier. standard is the baseline; fast_path is a
+# deliberately lighter subset for low-risk work; high_risk is standard plus stricter
+# gates. Referenced by id from workflow_profiles above. ----
 definition_of_done:
-  - Acceptance criteria all demonstrably met by a passing test.
-  - "`./mvnw verify` is green (unit + Testcontainers integration tests)."
-  - No blocking code-review findings; no Critical/High security findings.
-  - Team Lead has given an explicit APPROVED FOR MERGE verdict.
-  - API errors are RFC 9457 ProblemDetail; schema changes are Flyway migrations.
-  - Tracker item (Jira Epic/Story/Subtask) transitioned to Done and linked to the PR.
-  - Docs (README/ARCHITECTURE/OpenAPI) updated for any contract/config change.
+  fast_path:
+    - Acceptance criteria met by a passing test — unit tests at minimum; add an `*IT`
+      only if the change touches persistence or the API contract.
+    - "`./mvnw test` is green. (`./mvnw verify` only if an `*IT` was added.)"
+    - code-reviewer verdict is APPROVE or APPROVE WITH NITS, and has explicitly
+      confirmed no security-relevant surface was touched (see
+      .claude/agents/code-reviewer.md) — if it flagged one, this tier no longer
+      applies; re-classify and satisfy the standard/high_risk definition of done instead.
+    - Team Lead has given an explicit APPROVED FOR MERGE verdict.
+    - Docs updated only if the change is user/consumer visible.
+
+  standard:
+    - Acceptance criteria all demonstrably met by a passing test.
+    - "`./mvnw verify` is green (unit + Testcontainers integration tests)."
+    - No blocking code-review findings; no Critical/High security findings.
+    - Team Lead has given an explicit APPROVED FOR MERGE verdict.
+    - API errors are RFC 9457 ProblemDetail; schema changes are Flyway migrations.
+    - Tracker item (Jira Epic/Story/Subtask) transitioned to Done and linked to the PR.
+    - Docs (README/ARCHITECTURE/OpenAPI) updated for any contract/config change.
+
+  high_risk:
+    - Everything in the standard definition of done, plus —
+    - >-
+      Security Review verdict is an unqualified PASS — "PASS WITH RECOMMENDATIONS" blocks
+      merge until every recommendation is resolved or explicitly ticketed, not just noted.
+    - Team Lead has explicitly re-checked non-functionals (not just acceptance criteria)
+      against the requirements doc.
+    - A rollback/mitigation plan is documented (devops-engineer) before release.
 
 # ---- Conventions — see CONTRIBUTING.md for the full write-up ----
 conventions:

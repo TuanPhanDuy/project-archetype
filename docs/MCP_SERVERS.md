@@ -20,7 +20,7 @@ Legend: 🟢 ready now (no setup beyond what's in `.mcp.json`) · 🟡 needs a c
 | Server | Status | Notes |
 |---|---|---|
 | `github` | 🟡 | Official remote server. Needs `GITHUB_PERSONAL_ACCESS_TOKEN` (`repo` scope). Reuse `gh auth token`. Also used by [`/review-pr`](../.claude/commands/review-pr.md). |
-| `context7` | 🟢/🟡 | Official remote server (up-to-date library docs). Works unauthenticated at low rate limits; set `CONTEXT7_API_KEY` (free at context7.com) to raise them. Actively used by `solution-architect`/`spring-developer`/`test-engineer`/`devops-engineer` to check current API shapes before designing/implementing — see their agent files. |
+| `context7` | 🟢/🟡 | Official remote server (up-to-date library docs). Works unauthenticated at low rate limits; set `CONTEXT7_API_KEY` (free at context7.com) to raise them. Actively used by `solution-architect`/`senior-developer`/`test-engineer`/`devops-engineer` to check current API shapes before designing/implementing — see their agent files. |
 | `filesystem` | 🟢 | Official reference server, scoped to `.` (repo root) by its arg. No credentials. |
 | `playwright` | 🟢 | Official Microsoft browser-automation server. First run may need `npx playwright install` for browser binaries. |
 
