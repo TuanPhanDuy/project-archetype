@@ -44,7 +44,12 @@ gate was genuinely met, not just claimed.
 3. **Look for what the other gates wouldn't catch:** scope creep vs. the original story,
    silent assumptions where an open question got dropped instead of answered, a test that
    asserts the wrong thing but still passes, or a `fast_path` classification that doesn't
-   actually hold up (e.g. the diff touches a migration or an authz check after all).
+   actually hold up (e.g. the diff touches a migration or an authz check after all). If
+   `work-planner` drove this item, its status report named a model per package
+   (`sdlc.yaml`'s `model_selection`) — this isn't a gate you block on, but a `high_risk`
+   package that got a cheap model and shows it (subtle bugs, missed edge cases the review
+   rounds had to catch), or a trivial package that burned `opus` for no reason, is worth
+   naming in your output so `work-planner`/`scrum-master` calibrate next time.
 4. **Decide.** This is a go/no-go, not a style pass. Don't relitigate findings the code
    reviewer or security auditor already made a call on.
    - **Under the round limit:** verdict is **APPROVED FOR MERGE** or **NOT APPROVED**, sent

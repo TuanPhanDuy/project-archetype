@@ -61,6 +61,35 @@ review_iteration_policy: >
   `security-auditor` should say plainly which round their verdict is when it's not the
   first.
 
+# ---- Model selection: work-planner picks a model per dispatched work package to balance
+# output quality against token cost/latency. Not every package needs the strongest model —
+# and skimping on a genuinely hard one costs more in rework/review rounds than it saves.
+# Every agent's own frontmatter stays `model: inherit`; this is an override applied at
+# dispatch time only, so a directly-invoked agent (not via work-planner) is unaffected. ----
+model_selection:
+  owner: work-planner
+  guidance:
+    haiku: >
+      Mechanical, low-ambiguity work: a change that follows an exact existing pattern
+      (a config/copy tweak, a CRUD endpoint that mirrors Product's shape 1:1, a docs
+      update), or test scaffolding that mirrors an existing test almost exactly.
+    sonnet: >
+      The default. Most implementation and test packages: typical business logic,
+      standard endpoints, anything that doesn't clearly qualify for haiku or opus.
+    opus: >
+      Packages with real ambiguity or stakes: concurrency/idempotency logic, anything
+      in a high_risk-classified story (see task_classification), security-sensitive
+      code (authn/authz, payment, PII), or a package whose design leaves significant
+      judgment to the implementer.
+  rule: >
+    Choose per package, not by story tier alone — a high_risk story can still contain a
+    trivial package (e.g. an OpenAPI description update) that doesn't need opus, and a
+    standard story can contain one gnarly package that does. When genuinely unsure
+    between two levels, prefer the stronger one for anything touching correctness or
+    security, and the cheaper one for anything purely mechanical — a wrong call on a
+    mechanical package is cheap to catch in review, a wrong call on a hard one usually
+    isn't caught until it's already cost a review round or an incident.
+
 # ---- The team: each role maps to a Claude Code subagent in .claude/agents/ ----
 roles:
   - id: product-owner

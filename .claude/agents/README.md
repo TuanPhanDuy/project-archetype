@@ -79,6 +79,25 @@ touch a migration, say) stops and re-classifies to at least the next-stricter ti
 than continuing under lighter gates. `team-lead`'s final check re-verifies the tier
 actually held, not just that the phases which ran passed.
 
+## Model selection: work-planner picks the right model per package
+
+`work-planner` is the only agent that dispatches others (see "the one deliberate
+exception" above), which makes it the only agent actually positioned to control token
+cost and latency per unit of work — so it's also the one that picks each dispatched
+agent's model, per `sdlc.yaml`'s `model_selection`:
+
+| Model | Fits | Doesn't fit |
+|-------|------|--------------|
+| `haiku` | Mechanical, pattern-following work — a config/copy tweak, a CRUD endpoint mirroring an existing one 1:1, test scaffolding copied from an existing test | Anything with real design judgment left open |
+| `sonnet` | The default — typical implementation/test packages | — |
+| `opus` | Concurrency/idempotency logic, security-sensitive code, anything in a `high_risk` story, or a package whose design leaves significant judgment to the implementer | Purely mechanical packages — wastes tokens for no quality gain |
+
+This is a per-package decision, not the story's overall tier — a `high_risk` story can
+still contain a trivial package that doesn't need `opus`, and a `standard` story can
+contain one gnarly package that does. Every other agent's frontmatter stays
+`model: inherit`; the model choice is an override applied only at dispatch time, so
+invoking an agent directly (not through `work-planner`) is unaffected.
+
 **Phases 3 and 4 can be orchestrated as one fan-out** (independent of tier — a `standard`
 or `high_risk` item can still be wide enough to parallelize; `fast_path` items are single
 packages by definition and never need this). For a story wide enough to split,

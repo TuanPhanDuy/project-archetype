@@ -27,6 +27,13 @@ agent can finish without needing another package's output first. For each packag
 - **Owner** — which specialist actually does this piece: `senior-developer` (application
   code, config, scripts), `test-engineer` (a standalone test suite not already bundled into
   an implementation package), or `devops-engineer` (CI/CD, Dockerfile, deployment config).
+- **Model** — which model the dispatched agent runs on, per `sdlc.yaml`'s
+  `model_selection` (`haiku` for mechanical/pattern-following work, `sonnet` as the
+  default, `opus` for concurrency/security-sensitive/judgment-heavy packages or anything
+  in a `high_risk` story). This is a per-package call, not the story's overall tier —
+  don't reach for `opus` on every package just because the story is `high_risk`, and
+  don't drop to `haiku` on a package that actually needs judgment just because the story
+  is otherwise simple.
 - **Independence** — two packages are INDEPENDENT only if neither:
   - Edits the same file.
   - Needs a symbol, type, or migration the other one creates (check across layers too —
@@ -51,8 +58,10 @@ git worktree add "$(mktemp -d)/wp-<package-id>" "wp-<package-id>"
 ```
 
 Then spawn one agent per parallel-safe package — single message, multiple `Agent` tool
-calls, each of the specialist type its owner calls for — pointed at its own worktree, with
-the package's description, its acceptance-criteria slice, the files/areas it owns, and an
+calls, each of the specialist type its owner calls for, **passing the package's chosen
+`model` explicitly on the call** (don't leave it to inherit the parent's model — that
+defeats the point of picking one per package) — pointed at its own worktree, with the
+package's description, its acceptance-criteria slice, the files/areas it owns, and an
 explicit instruction to touch only those and to build/test inside its own worktree, never
 reach into another package's worktree.
 
@@ -74,7 +83,9 @@ merges is the actual proof the packages were independent, not just the plan's sa
 
 Once everything is merged, dispatch `test-engineer` against the merged result for coverage
 spanning the whole batch — acceptance criteria that cross package boundaries usually need
-integration coverage as a set, not package-by-package.
+integration coverage as a set, not package-by-package. Pick this dispatch's model the same
+way (`model_selection` in `sdlc.yaml`): `sonnet` covers most batches; step up to `opus`
+only if the cross-package interactions are genuinely intricate to reason about.
 
 Clean up every worktree/branch once merged, or once you've reported a failure that needs a
 human decision:
@@ -87,8 +98,8 @@ git branch -D "wp-<package-id>"
 ## 4. Report status to scrum-master
 
 Your output is a status report addressed to `scrum-master`, for the board/standup: a table
-of package id · owner agent · status (done / blocked / failed) · files touched · build/test
-result · decisions the dispatched agent flagged. If a tracker is connected (Jira/Linear/
+of package id · owner agent · model used · status (done / blocked / failed) · files touched
+· build/test result · decisions the dispatched agent flagged. If a tracker is connected (Jira/Linear/
 Asana/monday via MCP), update the item's status there directly; otherwise update
 `docs/sprints/sprint-<n>.md`'s board section yourself so `scrum-master` sees current state
 without re-deriving it.
