@@ -15,7 +15,7 @@ jobs:
     name: Build native executable (GraalVM 25)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up GraalVM for JDK 25
         uses: graalvm/setup-graalvm@v1
