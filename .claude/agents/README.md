@@ -49,6 +49,22 @@ actually holds (not just claimed) before release — it doesn't re-review code o
 security, and it sends work back to whichever phase's gate didn't really hold, not just to
 `senior-developer`.
 
+## Every task is implemented on its own branch — never on main
+
+Implementation (phase 3) always starts by checking out a feature branch
+(`feature/<jira-key>-<slug>`, per `CONTRIBUTING.md`) off the latest `main` — `main` itself
+is never touched directly. `senior-developer` does this itself on the direct path;
+`work-planner` does it once for the whole story before splitting into per-package worktree
+branches, all forked from that one feature branch rather than `main`. Creating and
+switching to a local branch is the one git action these agents take without being asked
+first — it's local and reversible, and the entire point is to guarantee nothing lands on
+`main` unreviewed. Committing, pushing the branch, and opening the PR remain separate,
+explicitly-requested actions, same as always (see each agent's Constraints/Environment
+notes). Code Review and Security Review (phase 5) require a PR to already be open —
+`/review-pr` reviews an existing PR, it doesn't create one — and the only way a change
+reaches `main` is that PR's squash-merge (`vcs.auto_merge_requires` in `sdlc.yaml`), never
+a direct push.
+
 ## The dev↔review loop is capped at 3 rounds
 
 A rejection at Code Review, Security Review, or Team Lead sends work back for a fix and

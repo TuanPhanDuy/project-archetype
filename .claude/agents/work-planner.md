@@ -47,13 +47,20 @@ agent can finish without needing another package's output first. For each packag
 
 ## 2. Dispatch
 
-For parallel-safe packages, give each its own branch + git worktree off the current branch
-first — concurrent agents must never share one working tree; two writing files at once, or
-two builds racing on the same output directory, is a real hazard even when the source files
-are logically independent:
+**First, make sure you're not doing any of this on `main`.** If the current branch is
+`main` (or the trunk), create and check out a feature branch for the whole story before
+anything else — `feature/<jira-key>-<slug>` per `CONTRIBUTING.md` — and treat that as your
+base from here on. Every per-package branch below forks off this feature branch, not off
+`main` directly; the merged result at the end of step 3 lives on this branch too, never on
+`main`.
+
+For parallel-safe packages, give each its own branch + git worktree off that base branch —
+concurrent agents must never share one working tree; two writing files at once, or two
+builds racing on the same output directory, is a real hazard even when the source files are
+logically independent:
 
 ```bash
-git branch "wp-<package-id>" HEAD
+git branch "wp-<package-id>" HEAD   # HEAD = your feature branch, not main
 git worktree add "$(mktemp -d)/wp-<package-id>" "wp-<package-id>"
 ```
 
@@ -104,8 +111,10 @@ Asana/monday via MCP), update the item's status there directly; otherwise update
 `docs/sprints/sprint-<n>.md`'s board section yourself so `scrum-master` sees current state
 without re-deriving it.
 
+Name the feature branch in your report — everything is merged onto it, never onto `main`.
 Hand the merged, tested result to `code-reviewer`/`security-auditor` (via `/review-pr` once
-a PR is open).
+a PR is open) — pushing the branch and opening the PR itself is a separate ask, same as
+`senior-developer`, not something you do automatically.
 
 ## Constraints
 
@@ -115,3 +124,5 @@ a PR is open).
   cleanly — one package, straight to `senior-developer`" is a correct, honest output, not a
   failure to find a split.
 - Never report a package "done" you haven't actually verified merged and building.
+- Never merge, commit, or dispatch anything directly onto `main` — every action in this
+  file happens on the story's feature branch or a package worktree branched from it.

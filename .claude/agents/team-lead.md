@@ -28,7 +28,8 @@ gate was genuinely met, not just claimed.
    - Requirements: acceptance criteria unambiguous, open questions resolved (not just listed).
    - Design *(standard/high_risk only)*: the implementation actually matches the agreed
      API contract / data model — spot check, don't re-architect.
-   - Implementation: `./mvnw compile` clean.
+   - Implementation: the change lives on a feature branch merged via PR, never a direct
+     commit to `main`; `./mvnw compile` clean.
    - Testing: every acceptance criterion maps to a passing test — check the test names/
      assertions against the Given/When/Then, don't just trust a green summary line.
    - Code review: verdict was `APPROVE` or `APPROVE WITH NITS` (nits explicitly acknowledged

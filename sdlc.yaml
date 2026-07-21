@@ -272,15 +272,19 @@ phases:
     # When this phase runs, work-planner dispatches senior-developer/test-engineer/
     # devops-engineer itself (see .claude/agents/work-planner.md) — it drives Implementation
     # and Testing below directly, rather than each being invoked separately by a human.
+    # Its own base branch (before any per-package worktree branches) must itself be a
+    # feature branch off main, per conventions.branching — never main directly.
 
   - id: implementation
     name: Implementation
     owner: senior-developer
     driven_by: work-planner, when Work Planning ran (optional)
     inputs: [design, work breakdown]
-    outputs: [code changes]
+    outputs: [feature branch, code changes]
     entry_gate: Design exit_gate met.
-    exit_gate: "./mvnw compile succeeds; conventions honored (package-by-layer, DTO boundary, Flyway-owned schema)."
+    exit_gate: >
+      A feature branch (never main) holds the changes; ./mvnw compile succeeds;
+      conventions honored (package-by-layer, DTO boundary, Flyway-owned schema).
 
   - id: testing
     name: Testing
@@ -298,7 +302,10 @@ phases:
     command: /review-pr <pr-number>
     inputs: [git diff, tests]
     outputs: [findings]
-    entry_gate: Testing exit_gate met.
+    entry_gate: >
+      Testing exit_gate met, and a PR is open from the feature branch (push the branch,
+      open the PR against main) — /review-pr operates on an existing PR, it doesn't
+      create one.
     exit_gate: No blocking findings remain.
 
   - id: security_review
@@ -369,7 +376,14 @@ definition_of_done:
 
 # ---- Conventions — see CONTRIBUTING.md for the full write-up ----
 conventions:
-  branching: trunk-based; short-lived feature branches feature/<jira-key>-<slug>.
+  branching: >
+    Trunk-based; short-lived feature branches feature/<jira-key>-<slug> (fix/... for
+    bugs). Every Implementation-phase task starts by checking out one of these off the
+    latest main — senior-developer (direct path) and work-planner (its own base branch,
+    before any per-package worktree branches) both do this as their first action, and
+    neither commits directly to main under any circumstance. The only way a change
+    reaches main is a squash-merged, reviewed PR (see vcs.auto_merge_requires) — never a
+    direct push.
   commits: >
     Conventional Commits (feat, fix, docs, style, refactor, perf, test, build, ci, chore),
     enforced by the .githooks/commit-msg hook (run scripts/setup-git-hooks.sh once per

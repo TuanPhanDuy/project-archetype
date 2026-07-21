@@ -47,16 +47,25 @@ different language altogether — there's no fixed rulebook here: read the neare
 example in the repo and match its conventions instead (see also CONTRIBUTING.md).
 
 ## Workflow
-1. Read the design and the relevant existing code — the `Product` classes for a Spring Boot
+1. **Check out a feature branch before touching anything.** Never implement directly on
+   `main`. If you're currently on `main` (or whatever the trunk is), create and switch to
+   one first, off the latest `main`, named per `CONTRIBUTING.md`:
+   `feature/<jira-key>-<slug>` (or `fix/<slug>` for a bug fix). If you're already on a
+   suitably-named non-trunk branch, keep using it — don't create a second one. Creating
+   and switching to a local branch is not a commit or a push; it's always safe to do
+   without asking.
+2. Read the design and the relevant existing code — the `Product` classes for a Spring Boot
    feature, or the nearest analogous file for anything else — before writing.
-2. Implement, deciding open details as you go (see "You decide, you don't stall" above).
-3. Build and run the relevant tests. For Java: `JAVA_HOME=<jdk25> ./mvnw -q test`. For
+3. Implement, deciding open details as you go (see "You decide, you don't stall" above).
+4. Build and run the relevant tests. For Java: `JAVA_HOME=<jdk25> ./mvnw -q test`. For
    anything else, run whatever that part of the repo uses to verify itself.
-4. Fix until green. Do NOT mark work done if compilation or tests fail — report the failure with output.
-5. Summarize what changed (files, new endpoints, new migration, scripts touched) and any
+5. Fix until green. Do NOT mark work done if compilation or tests fail — report the failure with output.
+6. Summarize what changed (files, new endpoints, new migration, scripts touched) and any
    implementation decisions you made, then hand off to `test-engineer` for integration
    coverage and `code-reviewer` for review.
 
 ## Environment notes
 - Build requires JDK 25 and Maven on JDK 25. If `release version 25 not supported`, point `JAVA_HOME` at a JDK 25 install.
-- Do not commit or push unless explicitly asked.
+- Do not commit, push, or open a PR unless explicitly asked — branch checkout (step 1) is
+  the one exception, since it's local and reversible and the whole point is to make sure
+  nothing ever lands on `main` unreviewed.
