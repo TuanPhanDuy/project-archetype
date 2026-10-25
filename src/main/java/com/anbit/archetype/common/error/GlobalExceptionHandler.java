@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -80,6 +81,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ProblemDetail handleOptimisticLock(OptimisticLockingFailureException ex) {
         return problem(HttpStatus.CONFLICT, "Concurrent modification", "optimistic-lock",
                 "The resource was modified concurrently; reload and retry");
+    }
+
+    // ---- Outbound integrations (integration package) ----
+
+    @ExceptionHandler(RestClientException.class)
+    public ProblemDetail handleUpstreamFailure(RestClientException ex) {
+        // Don't echo the partner's error to our client.
+        log.warn("Upstream call failed: {}", ex.getMessage());
+        return problem(HttpStatus.BAD_GATEWAY, "Upstream service error", "upstream",
+                "A downstream system failed to handle the request; retry later");
     }
 
     // ---- Fallback: anything unmapped is a 500, logged with full stack trace ----

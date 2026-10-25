@@ -55,6 +55,15 @@ spring:
     validate-on-migrate: true
     locations: classpath:db/migration
 
+  # ---- Outbound HTTP clients (defaults + one serviceclient entry per system) ----
+  http:
+    clients:
+      connect-timeout: ${HTTP_CLIENT_CONNECT_TIMEOUT:2s}
+      read-timeout: ${HTTP_CLIENT_READ_TIMEOUT:5s}
+    serviceclient:
+      warehouse:
+        base-url: ${WAREHOUSE_BASE_URL:http://localhost:8081}
+
   # Optional: load secrets mounted as a config tree (e.g. Kubernetes/Docker secrets).
   config:
     import: optional:configtree:/run/secrets/
@@ -70,6 +79,14 @@ server:
     include-binding-errors: never
     include-stacktrace: never
     include-exception: false
+
+# WarehouseGateway retry policy.
+app:
+  integration:
+    warehouse:
+      retry:
+        max-retries: ${WAREHOUSE_MAX_RETRIES:3}
+        delay-ms: ${WAREHOUSE_RETRY_DELAY_MS:200}
 
 # ============================================================================
 # Observability: metrics (Prometheus), tracing (OTLP), health probes.
