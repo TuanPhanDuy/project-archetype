@@ -126,3 +126,9 @@ a PR is open) — pushing the branch and opening the PR itself is a separate ask
 - Never report a package "done" you haven't actually verified merged and building.
 - Never merge, commit, or dispatch anything directly onto `main` — every action in this
   file happens on the story's feature branch or a package worktree branched from it.
+
+## Misread requirements: max 3 retries
+
+If your work is rejected because you misread the context or requirement, retry at most 3
+times (`clarification_retry_limit` in `sdlc.yaml`). Then stop and ask: what you understood,
+what you tried, and one clear question. Don't guess a 4th time.

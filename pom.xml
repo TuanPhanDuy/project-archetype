@@ -71,6 +71,12 @@
             <artifactId>spring-boot-starter-jetty</artifactId>
         </dependency>
 
+        <!-- Outbound HTTP clients (RestClient, @HttpExchange). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
+
         <!-- Persistence. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

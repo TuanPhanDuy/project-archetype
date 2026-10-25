@@ -61,6 +61,16 @@ review_iteration_policy: >
   `security-auditor` should say plainly which round their verdict is when it's not the
   first.
 
+# ---- Clarification cap: when work fails because the context or the requirement was
+# misunderstood (wrong behaviour built, missed acceptance criterion, wrong file/scope),
+# an agent may retry at most this many times, then must stop and ask. ----
+clarification_retry_limit: 3
+clarification_retry_policy: >
+  Count each attempt redone because the context or requirement was misread. After the
+  limit, stop retrying and go back to clarify: state what was understood, what was tried,
+  and the exact question, and ask the requester (or `requirements-analyst` for story-level
+  gaps). Don't guess a 4th time.
+
 # ---- Model selection: work-planner picks a model per dispatched work package to balance
 # output quality against token cost/latency. Not every package needs the strongest model —
 # and skimping on a genuinely hard one costs more in rework/review rounds than it saves.
