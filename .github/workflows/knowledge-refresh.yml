@@ -1,0 +1,67 @@
+name: Knowledge refresh
+
+# Daily: Claude refreshes docs/knowledge/TECH_RADAR.md (versions, new features, advisories)
+# and opens/updates one PR for human review. Needs the ANTHROPIC_API_KEY secret.
+on:
+  schedule:
+    - cron: '0 1 * * *'   # 01:00 UTC = 08:00 ICT
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: knowledge-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    # The archetype repo itself uses a Claude cloud routine instead; generated projects run this.
+    if: github.repository != 'TuanPhanDuy/project-archetype'
+    runs-on: ubuntu-latest   # Docker preinstalled, so `./mvnw verify` can run Testcontainers
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Report dependency updates (stable only)
+        run: |
+          V=org.codehaus.mojo:versions-maven-plugin:2.18.0
+          ./mvnw -B --no-transfer-progress -q \
+            $V:display-parent-updates $V:display-dependency-updates \
+            -DprocessDependencyManagement=false \
+            "-Dmaven.version.ignore=.*-RC.*,.*-M\d+,.*-alpha.*,.*-beta.*,.*SNAPSHOT" \
+            -Dversions.outputFile=target/dependency-updates.txt -DappendOutput=true
+
+      - name: Refresh tech radar
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Follow .claude/commands/refresh-knowledge.md exactly. Today's run is scheduled; don't commit or push — the next step opens the PR.
+          # No git/gh/curl: Claude only edits files; the PR step below does the git work.
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Edit,Write,WebSearch,WebFetch,Bash(./mvnw:*)"
+
+      - name: Open or update PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/knowledge-refresh
+          delete-branch: true
+          add-paths: |
+            docs/knowledge/**
+            pom.xml
+          commit-message: 'chore(knowledge): daily tech & security refresh'
+          title: 'chore(knowledge): daily tech & security refresh'
+          body: |
+            Automated by `knowledge-refresh.yml` (`/refresh-knowledge`).
+            Review **Action needed** first; any `pom.xml` change is a security patch bump that passed `./mvnw verify`.
+          labels: knowledge, security

@@ -28,6 +28,8 @@ the design doc.
 
 ## Stay current with Context7
 
+Read `docs/knowledge/TECH_RADAR.md` first: current versions, security advisories and deprecations for this stack (refreshed daily).
+
 Before writing code against an unfamiliar or fast-moving API — in this repo that's usually
 Spring Boot/Framework, Spring Data JPA specifics like `Persistable`, GraalVM native-image
 hints, Testcontainers, or Flyway, but the same applies to any other library or tool the task

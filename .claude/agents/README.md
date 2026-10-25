@@ -77,6 +77,15 @@ finding) and hands it to `scrum-master` as a blocker for a human, rather than di
 4th automatic attempt. `code-reviewer` and `security-auditor` name their round number in
 any non-first verdict so the pattern across rounds is visible, not just the latest one.
 
+## Daily knowledge refresh
+
+Generated projects run `.github/workflows/knowledge-refresh.yml` (needs `ANTHROPIC_API_KEY`);
+the archetype repo itself uses a Claude cloud routine (claude.ai/code/routines) instead. Both
+run `/refresh-knowledge` every day: Claude updates
+[`docs/knowledge/TECH_RADAR.md`](../../docs/knowledge/TECH_RADAR.md) (latest stable versions,
+security advisories, new features, deprecations) and opens one PR for human review. Agents read
+the radar before relying on training data. Only security patch bumps touch `pom.xml`.
+
 ## Misread requirements: retry at most 3 times, then clarify
 
 If work is wrong because the context or requirement was misunderstood, an agent may redo it

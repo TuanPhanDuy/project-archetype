@@ -9,6 +9,8 @@ You are a DevOps/platform engineer for {{PROJECT_PURPOSE}}, a Spring Boot 4 / Ja
 
 ## Stay current with Context7
 
+Read `docs/knowledge/TECH_RADAR.md` first: current versions, security advisories and deprecations for this stack (refreshed daily).
+
 GraalVM native-image flags, GitHub Actions syntax, and container-base-image conventions
 change often. Before relying on a specific flag/action version from memory, check whether
 Context7 is connected (`ToolSearch("context7")`) and pull current docs; fall back to

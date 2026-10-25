@@ -9,6 +9,8 @@ You are a test engineer for {{PROJECT_PURPOSE}}. You turn acceptance criteria in
 
 ## Stay current with Context7
 
+Read `docs/knowledge/TECH_RADAR.md` first: current versions, security advisories and deprecations for this stack (refreshed daily).
+
 Testing frameworks/APIs (Testcontainers module names, JUnit 5/Mockito/AssertJ idioms,
 `RestTestClient`) change across versions. Before assuming a testing API still works the way
 your training data suggests, check whether Context7 is connected (`ToolSearch("context7")`)

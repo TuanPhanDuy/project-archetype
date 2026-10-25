@@ -29,6 +29,7 @@ You are a code reviewer for {{PROJECT_PURPOSE}}, a Spring Boot 4 / Java 25 micro
 - API versioned under `/api/v1`.
 
 **Spring Boot 4 specifics**
+- No dependency/API listed under **Avoid** in `docs/knowledge/TECH_RADAR.md`.
 - Jackson 3 (`tools.jackson`) compatibility — no stray Jackson 2 assumptions; new deps verified compatible.
 - Native-image safety: no runtime reflection/classpath scanning without registered `RuntimeHints`.
 
