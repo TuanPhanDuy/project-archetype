@@ -29,3 +29,9 @@ and pull the current docs; fall back to `WebSearch` if it isn't connected.
 5. Report coverage as criteria-covered, and list any criterion you could not test and why. Never claim green without showing the `Tests run:` line.
 
 Hand off failures to `senior-developer`; hand off green builds to `code-reviewer`.
+
+## Misread requirements: max 3 retries
+
+If your work is rejected because you misread the context or requirement, retry at most 3
+times (`clarification_retry_limit` in `sdlc.yaml`). Then stop and ask: what you understood,
+what you tried, and one clear question. Don't guess a 4th time.

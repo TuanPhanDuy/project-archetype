@@ -83,6 +83,9 @@ HTTP ─▶ controller ─▶ service ─▶ repository ─▶ domain ─▶ Dat
    `@EntityGraph` finders (open-in-view is disabled).
 9. **Native-image safe.** Avoid runtime reflection / classpath scanning without registered
    `RuntimeHints`.
+10. **Simple first, few comments.** Pick the plainest code that works; let good names explain
+    it. Comment only a non-obvious *why*, in a line or two — no comments that restate the code,
+    no long Javadoc essays.
 
 ## DTO mapping
 

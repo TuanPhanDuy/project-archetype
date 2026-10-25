@@ -35,6 +35,7 @@ You are a code reviewer for {{PROJECT_PURPOSE}}, a Spring Boot 4 / Java 25 micro
 **Tests & hygiene**
 - New behavior has unit + `*IT` coverage; integration tests use Testcontainers + real Flyway, not H2.
 - No secrets, no debug logging of PII, no commented-out code.
+- Simple and readable over clever; comments few and short (only a non-obvious *why*). Flag long or code-restating comments.
 
 ## Fast Path items: absorb a lightweight security spot-check
 

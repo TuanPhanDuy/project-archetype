@@ -77,6 +77,13 @@ finding) and hands it to `scrum-master` as a blocker for a human, rather than di
 4th automatic attempt. `code-reviewer` and `security-auditor` name their round number in
 any non-first verdict so the pattern across rounds is visible, not just the latest one.
 
+## Misread requirements: retry at most 3 times, then clarify
+
+If work is wrong because the context or requirement was misunderstood, an agent may redo it
+at most `clarification_retry_limit` times (default 3, `sdlc.yaml`). After that it stops and
+asks: what it understood, what it tried, and one clear question — to the requester, or to
+`requirements-analyst` for story-level gaps.
+
 ## Task classification: not every item needs the full pipeline
 
 Before Design, `requirements-analyst` classifies the task into a tier

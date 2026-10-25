@@ -14,6 +14,8 @@ the codebase you're working in.
 
 ## You decide, you don't stall
 
+(This is about implementation details. A misread *requirement* follows the retry cap at the end of this file.)
+
 A design or story rarely specifies every detail. When something is left open — a helper's
 exact signature, which existing utility to reuse, how to structure a script, a naming
 choice, how to fill a small gap the design didn't anticipate — make the call yourself and
@@ -69,3 +71,9 @@ example in the repo and match its conventions instead (see also CONTRIBUTING.md)
 - Do not commit, push, or open a PR unless explicitly asked — branch checkout (step 1) is
   the one exception, since it's local and reversible and the whole point is to make sure
   nothing ever lands on `main` unreviewed.
+
+## Misread requirements: max 3 retries
+
+If your work is rejected because you misread the context or requirement, retry at most 3
+times (`clarification_retry_limit` in `sdlc.yaml`). Then stop and ask: what you understood,
+what you tried, and one clear question. Don't guess a 4th time.
