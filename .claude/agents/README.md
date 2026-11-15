@@ -116,6 +116,18 @@ workflow a `SERVICE_INBOX_TOKEN` (PAT or GitHub App) so its PRs trigger CI and i
 in other repos. Only requests from authors with write access, or from registered services,
 are acted on automatically.
 
+## Graph view in Obsidian
+
+Open the repo root as an Obsidian vault and open Graph view. Obsidian skips dot-folders and
+YAML, so `docs/graph/build-graph.py` turns `.claude/`, `.github/workflows/` and `sdlc.yaml`
+into one note per agent, skill, command, workflow, phase, tier, ceremony and service, linked
+by real relationships (phase → owner → next phase, tier → phases, who mentions whom,
+service → consumes). `.obsidian/graph.json` colors each group; start from
+[`docs/graph/Index.md`](../../docs/graph/Index.md).
+
+The notes are generated: edit the sources, then run `python3 docs/graph/build-graph.py`
+(needs PyYAML). CI's "Docs graph up to date" job fails when they drift.
+
 ## Misread requirements: retry at most 3 times, then clarify
 
 If work is wrong because the context or requirement was misunderstood, an agent may redo it

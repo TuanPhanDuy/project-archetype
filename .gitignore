@@ -27,3 +27,8 @@ out/
 
 ### Archetype (regenerated from the project by archetype/sync.sh) ###
 archetype/src/main/resources/archetype-resources/
+
+# Obsidian: share the vault config, not per-user state
+.obsidian/*
+!.obsidian/app.json
+!.obsidian/graph.json

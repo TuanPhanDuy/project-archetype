@@ -39,6 +39,14 @@
             <includes><include>**/*</include></includes>
         </fileSet>
         <fileSet filtered="false" encoding="UTF-8">
+            <directory>docs</directory>
+            <includes><include>**/*</include></includes>
+        </fileSet>
+        <fileSet filtered="false" encoding="UTF-8">
+            <directory>.obsidian</directory>
+            <includes><include>*.json</include></includes>
+        </fileSet>
+        <fileSet filtered="false" encoding="UTF-8">
             <directory>k6</directory>
             <includes><include>**/*</include></includes>
         </fileSet>

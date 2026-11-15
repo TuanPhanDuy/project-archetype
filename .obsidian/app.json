@@ -1,0 +1,4 @@
+{
+  "userIgnoreFilters": ["src/", "target/", "archetype/", "k6/", "observability/", "scripts/", ".mvn/"],
+  "alwaysUpdateLinks": true
+}
