@@ -49,6 +49,16 @@ actually holds (not just claimed) before release — it doesn't re-review code o
 security, and it sends work back to whichever phase's gate didn't really hold, not just to
 `senior-developer`.
 
+### Ad hoc QA outside the phase pipeline
+
+`/qa-validate` ([`.claude/skills/qa-validate/SKILL.md`](../skills/qa-validate/SKILL.md)) is a
+standalone skill, not a numbered phase — call it any time to hunt bugs or backfill
+regression tests. Where `test-engineer` (phase 4) proves acceptance criteria already agreed
+on, `qa-validate` is for "did this actually work" on demand: it insists on driving the real
+running service (curl/`RestTestClient` against a live instance, not just reading the diff)
+before calling anything a confirmed bug, then writes the regression test and re-verifies the
+fix the same way it found the break.
+
 ## Every task is implemented on its own branch — never on main
 
 Implementation (phase 3) always starts by checking out a feature branch
@@ -77,6 +87,22 @@ finding) and hands it to `scrum-master` as a blocker for a human, rather than di
 4th automatic attempt. `code-reviewer` and `security-auditor` name their round number in
 any non-first verdict so the pattern across rounds is visible, not just the latest one.
 
+## Daily knowledge refresh
+
+Generated projects run `.github/workflows/knowledge-refresh.yml` (needs `ANTHROPIC_API_KEY`);
+the archetype repo itself uses a Claude cloud routine (claude.ai/code/routines) instead. Both
+run `/refresh-knowledge` every day: Claude updates
+[`docs/knowledge/TECH_RADAR.md`](../../docs/knowledge/TECH_RADAR.md) (latest stable versions,
+security advisories, new features, deprecations) and opens one PR for human review. Agents read
+the radar before relying on training data. Only security patch bumps touch `pom.xml`.
+
+## Misread requirements: retry at most 3 times, then clarify
+
+If work is wrong because the context or requirement was misunderstood, an agent may redo it
+at most `clarification_retry_limit` times (default 3, `sdlc.yaml`). After that it stops and
+asks: what it understood, what it tried, and one clear question — to the requester, or to
+`requirements-analyst` for story-level gaps.
+
 ## Task classification: not every item needs the full pipeline
 
 Before Design, `requirements-analyst` classifies the task into a tier
@@ -95,24 +121,48 @@ touch a migration, say) stops and re-classifies to at least the next-stricter ti
 than continuing under lighter gates. `team-lead`'s final check re-verifies the tier
 actually held, not just that the phases which ran passed.
 
-## Model selection: work-planner picks the right model per package
+## Model and effort selection: two axes, picked at every dispatch point
 
-`work-planner` is the only agent that dispatches others (see "the one deliberate
-exception" above), which makes it the only agent actually positioned to control token
-cost and latency per unit of work — so it's also the one that picks each dispatched
-agent's model, per `sdlc.yaml`'s `model_selection`:
+Any agent that dispatches another is the one positioned to control token cost/latency and
+review depth for that unit of work — that's `work-planner` for Implementation/Testing, and
+`/review-pr` (or whoever else dispatches `code-reviewer`/`security-auditor`/`team-lead`
+directly) for the review phases. Both pick from `sdlc.yaml`'s `model_selection` (which
+model) and `effort_selection` (how thorough a pass):
 
 | Model | Fits | Doesn't fit |
 |-------|------|--------------|
-| `haiku` | Mechanical, pattern-following work — a config/copy tweak, a CRUD endpoint mirroring an existing one 1:1, test scaffolding copied from an existing test | Anything with real design judgment left open |
-| `sonnet` | The default — typical implementation/test packages | — |
-| `opus` | Concurrency/idempotency logic, security-sensitive code, anything in a `high_risk` story, or a package whose design leaves significant judgment to the implementer | Purely mechanical packages — wastes tokens for no quality gain |
+| `haiku` | Mechanical, pattern-following work — a config/copy tweak, a CRUD endpoint mirroring an existing one 1:1, test scaffolding copied from an existing test; `fast_path` review items | Anything with real design judgment left open |
+| `sonnet` | The default — typical implementation/test packages; `standard`-tier review items | — |
+| `opus` | Concurrency/idempotency logic, security-sensitive code, anything in a `high_risk` story, a package whose design leaves significant judgment to the implementer, or any item already in a 2nd+ review round | Purely mechanical packages — wastes tokens for no quality gain |
 
-This is a per-package decision, not the story's overall tier — a `high_risk` story can
-still contain a trivial package that doesn't need `opus`, and a `standard` story can
-contain one gnarly package that does. Every other agent's frontmatter stays
-`model: inherit`; the model choice is an override applied only at dispatch time, so
-invoking an agent directly (not through `work-planner`) is unaffected.
+| Depth (`effort_selection`) | Tier | Means |
+|------|------|-------|
+| `low` | `fast_path` | code-reviewer's own spot-check substitutes for security_review; Trivy/Semgrep optional unless a dependency/Dockerfile changed |
+| `standard` | `standard` | Full checklist; security-auditor always runs Trivy + Semgrep scoped to the diff |
+| `high` | `high_risk` | Same as `standard`, plus: Critical/High Trivy hits block even outside the diff's surface, non-functionals get explicitly re-checked, and either agent may recommend escalating to `/code-review ultra` |
+
+Both are per-dispatch decisions, not the story's overall tier applied blindly — a
+`high_risk` story can still contain a trivial package that doesn't need `opus`/`high`
+depth, and a `standard` story can contain one gnarly package that does. Every agent's own
+frontmatter stays `model: inherit`; the override is applied only at dispatch time (an
+explicit `model:` on the `Agent` call, plus a tier/depth line in the dispatch prompt), so
+invoking an agent directly with no explicit model/tier just inherits the session's model
+and reviews at `standard` depth.
+
+Every other dispatch — `scrum-master`, a human, or the main session calling an agent
+directly — starts from `model_selection.defaults_by_role`:
+
+| Agent | Default | Step down / up |
+|-------|---------|----------------|
+| `product-owner`, `ux-designer` | `sonnet` | — |
+| `scrum-master` | `sonnet` | `haiku` for standup / status roll-up |
+| `requirements-analyst` | `sonnet` | `opus` if the item looks `high_risk` or the tier is unclear |
+| `solution-architect` | `opus` | `sonnet` if the design mirrors an existing component 1:1 |
+| `work-planner` | `sonnet` | `opus` for a `high_risk` story |
+| `senior-developer`, `test-engineer` | per the model table above | — |
+| `devops-engineer` | `sonnet` | `haiku` for a CI/config tweak; `opus` for production deploy, secrets or network exposure |
+| `code-reviewer`, `security-auditor` | per tier, as `/review-pr` does | — |
+| `team-lead` | `sonnet` | `haiku` for `fast_path`; `opus` for `high_risk` or a 2nd+ review round |
 
 **Phases 3 and 4 can be orchestrated as one fan-out** (independent of tier — a `standard`
 or `high_risk` item can still be wide enough to parallelize; `fast_path` items are single
@@ -128,9 +178,12 @@ single `senior-developer` run, same as before.
 
 Once a PR is open, run `/review-pr <pr-number>` to drive phase 5 against it directly: it
 checks the PR out into an isolated git worktree (your own working tree is never touched),
-runs `code-reviewer` and `security-auditor` in parallel, posts their findings as a PR
-review, and auto-merges **only** if both come back fully clean (code-reviewer `APPROVE`,
-security-auditor `PASS` — no qualifiers). Anything less is left for a human. Each posted
+resolves the item's risk tier (tracker/PR body, default `standard`), dispatches
+`code-reviewer` and `security-auditor` in parallel with the model and depth that tier maps
+to (per the table above — `security-auditor` runs Trivy + Semgrep at `standard`/`high`
+depth), posts their findings as a PR review, and auto-merges **only** if both come back
+fully clean (code-reviewer `APPROVE`, security-auditor `PASS` — no qualifiers). Anything
+less is left for a human. Each posted
 comment carries a hidden round marker so re-running `/review-pr` on the same PR counts
 against the cap above automatically — by round 3 it stops reporting per-round and posts a
 single escalation summarizing every round instead. See

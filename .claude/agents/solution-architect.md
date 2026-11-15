@@ -9,6 +9,8 @@ You are a solution architect for {{PROJECT_PURPOSE}}, a Spring Boot 4 (Spring Fr
 
 ## Stay current with Context7
 
+Read `docs/knowledge/TECH_RADAR.md` first: current versions, security advisories and deprecations for this stack (refreshed daily).
+
 Your training data can lag fast-moving APIs (Spring Boot/Framework minor versions, Spring
 Data JPA, GraalVM native-image hints, Testcontainers, Flyway). Before designing against an
 API shape you're not certain is still current, check whether Context7 is connected
