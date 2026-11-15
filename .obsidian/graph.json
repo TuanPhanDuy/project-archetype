@@ -1,0 +1,18 @@
+{
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": true,
+  "showOrphans": false,
+  "showArrow": true,
+  "colorGroups": [
+    { "query": "path:docs/graph/agents", "color": { "a": 1, "rgb": 5020415 } },
+    { "query": "path:docs/graph/skills", "color": { "a": 1, "rgb": 3584894 } },
+    { "query": "path:docs/graph/commands", "color": { "a": 1, "rgb": 16755456 } },
+    { "query": "path:docs/graph/workflows", "color": { "a": 1, "rgb": 6640832 } },
+    { "query": "path:docs/graph/phases", "color": { "a": 1, "rgb": 16733744 } },
+    { "query": "path:docs/graph/tiers", "color": { "a": 1, "rgb": 15277667 } },
+    { "query": "path:docs/graph/ceremonies", "color": { "a": 1, "rgb": 47321 } },
+    { "query": "path:docs/graph/services", "color": { "a": 1, "rgb": 9268835 } },
+    { "query": "-path:docs/graph", "color": { "a": 1, "rgb": 10070709 } }
+  ]
+}

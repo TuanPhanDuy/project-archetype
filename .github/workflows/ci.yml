@@ -48,3 +48,18 @@ jobs:
           name: app-jar
           path: target/*.jar
           if-no-files-found: ignore
+
+  graph:
+    name: Docs graph up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Check docs/graph matches its sources
+        run: |
+          pip install --quiet pyyaml==6.0.2
+          python docs/graph/build-graph.py --check
