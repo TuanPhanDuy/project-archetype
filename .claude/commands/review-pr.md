@@ -40,16 +40,29 @@ gh pr view "$N" --json title,body,baseRefName,headRefName,url,mergeable,mergeSta
   ```
   If `ROUND` exceeds the limit and the PR still isn't clean, this run is the escalation
   round, not another fix-and-re-review cycle — see step 4.
+- **Determine the risk tier** (`fast_path`/`standard`/`high_risk`) for `model_selection`
+  and `effort_selection` in `sdlc.yaml`: check the linked tracker item (Jira) for the tier
+  `requirements-analyst` assigned, or the PR body/description if it states one. If neither
+  says, default to `standard` rather than guessing down to `fast_path`. If `ROUND > 1`,
+  treat the dispatch as at least `opus`/`high` regardless of the item's tier — see
+  `model_selection`'s rule for recurring-finding rounds.
 
 ## 2. Review in parallel
 
-Spawn both agents concurrently (single message, two Agent tool calls) — each is read-only
+Pick the model for this dispatch from `sdlc.yaml`'s `model_selection` guidance using the
+tier from step 1 (`haiku` for `fast_path`, `sonnet` for `standard`, `opus` for `high_risk`
+or `ROUND > 1`), and the depth from `effort_selection` (`low`/`standard`/`high` by the same
+tier). Spawn both agents concurrently (single message, two Agent tool calls), **passing the
+chosen model explicitly on each `Agent` call** — don't leave it to inherit — each read-only
 and independent:
 
-- **code-reviewer**: "Review the PR changes in `$WT` (diff against `origin/$BASE`). Follow
-  your standard checklist. End with your verdict line."
-- **security-auditor**: same worktree/base, same instruction, its own checklist and verdict
-  line.
+- **code-reviewer** (model: as chosen above): "Review the PR changes in `$WT` (diff against
+  `origin/$BASE`). This item is tier `<tier>`, depth `<low|standard|high>` per
+  `effort_selection` in `sdlc.yaml` — scale your pass accordingly. Follow your standard
+  checklist. End with your verdict line."
+- **security-auditor** (model: as chosen above): same worktree/base/tier/depth, its own
+  checklist and verdict line — depth `standard`/`high` means actually run the Trivy +
+  Semgrep scanners described in its own instructions, not skip straight to manual review.
 
 Wait for both to finish before proceeding — the merge gate needs both verdicts together.
 

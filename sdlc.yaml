@@ -61,34 +61,103 @@ review_iteration_policy: >
   `security-auditor` should say plainly which round their verdict is when it's not the
   first.
 
-# ---- Model selection: work-planner picks a model per dispatched work package to balance
-# output quality against token cost/latency. Not every package needs the strongest model —
-# and skimping on a genuinely hard one costs more in rework/review rounds than it saves.
+# ---- Clarification cap: when work fails because the context or the requirement was
+# misunderstood (wrong behaviour built, missed acceptance criterion, wrong file/scope),
+# an agent may retry at most this many times, then must stop and ask. ----
+clarification_retry_limit: 3
+clarification_retry_policy: >
+  Count each attempt redone because the context or requirement was misread. After the
+  limit, stop retrying and go back to clarify: state what was understood, what was tried,
+  and the exact question, and ask the requester (or `requirements-analyst` for story-level
+  gaps). Don't guess a 4th time.
+
+# ---- Model selection: picks a model per dispatched agent to balance output quality
+# against token cost/latency. Not every piece of work needs the strongest model — and
+# skimping on a genuinely hard one costs more in rework/review rounds than it saves.
 # Every agent's own frontmatter stays `model: inherit`; this is an override applied at
-# dispatch time only, so a directly-invoked agent (not via work-planner) is unaffected. ----
+# dispatch time only (an explicit `model:` on the `Agent` call), so an agent invoked with
+# no explicit model (e.g. typed directly by a human in chat) just inherits the session's
+# model and this table doesn't apply. Two owners apply it at two different dispatch
+# points:
+#   - `work-planner` — per work package, at Implementation/Testing time (see
+#     phases.work_planning below).
+#   - Whoever dispatches `code-reviewer`/`security-auditor`/`team-lead` directly — chiefly
+#     `.claude/commands/review-pr.md` — per the task's `task_classification` tier, since
+#     those phases usually run without `work-planner` in front of them. ----
 model_selection:
-  owner: work-planner
+  owner: work-planner (implementation/testing), review-pr / direct dispatcher (review phases)
   guidance:
     haiku: >
       Mechanical, low-ambiguity work: a change that follows an exact existing pattern
       (a config/copy tweak, a CRUD endpoint that mirrors Product's shape 1:1, a docs
-      update), or test scaffolding that mirrors an existing test almost exactly.
+      update), or test scaffolding that mirrors an existing test almost exactly. For
+      review phases: a `fast_path` item with a small, mechanical diff.
     sonnet: >
       The default. Most implementation and test packages: typical business logic,
-      standard endpoints, anything that doesn't clearly qualify for haiku or opus.
+      standard endpoints, anything that doesn't clearly qualify for haiku or opus. For
+      review phases: the default for `standard`-tier items.
     opus: >
       Packages with real ambiguity or stakes: concurrency/idempotency logic, anything
       in a high_risk-classified story (see task_classification), security-sensitive
       code (authn/authz, payment, PII), or a package whose design leaves significant
-      judgment to the implementer.
+      judgment to the implementer. For review phases: always for `high_risk`-tier items,
+      and for any item (any tier) already in a 2nd+ review round per
+      `review_iteration_limit` — a recurring finding means the cheaper model's first pass
+      missed something, don't repeat that with the same model.
   rule: >
-    Choose per package, not by story tier alone — a high_risk story can still contain a
-    trivial package (e.g. an OpenAPI description update) that doesn't need opus, and a
-    standard story can contain one gnarly package that does. When genuinely unsure
-    between two levels, prefer the stronger one for anything touching correctness or
-    security, and the cheaper one for anything purely mechanical — a wrong call on a
+    Choose per package/dispatch, not by story tier alone — a high_risk story can still
+    contain a trivial package (e.g. an OpenAPI description update) that doesn't need
+    opus, and a standard story can contain one gnarly package that does. When genuinely
+    unsure between two levels, prefer the stronger one for anything touching correctness
+    or security, and the cheaper one for anything purely mechanical — a wrong call on a
     mechanical package is cheap to catch in review, a wrong call on a hard one usually
     isn't caught until it's already cost a review round or an incident.
+  # Starting point for any dispatcher (scrum-master, a human, the main session) calling an
+  # agent directly, outside work-planner/review-pr; `guidance`/`rule` above still win.
+  defaults_by_role:
+    product-owner: { default: sonnet }
+    scrum-master: { default: sonnet, haiku: standup or board/status roll-up }
+    ux-designer: { default: sonnet }
+    requirements-analyst: { default: sonnet, opus: item looks high_risk or the tier is unclear }
+    solution-architect: { default: opus, sonnet: design mirrors an existing component 1:1 }
+    work-planner: { default: sonnet, opus: high_risk story }
+    senior-developer: { default: per guidance above }
+    test-engineer: { default: per guidance above }
+    devops-engineer: { default: sonnet, haiku: CI/config tweak, opus: production deploy, secrets or network exposure }
+    code-reviewer: { default: per tier, as in review-pr }
+    security-auditor: { default: per tier, as in review-pr }
+    team-lead: { default: sonnet, haiku: fast_path, opus: high_risk or 2nd+ review round }
+
+# ---- Effort/depth selection: a second axis, orthogonal to model — how exhaustive the
+# agent's own pass should be (how many files/scanners/edge cases it covers), not which
+# model runs it. This matters because some agents here can't vary strength by model
+# parameter alone (e.g. `code-reviewer`/`security-auditor` scanner coverage, or whether to
+# escalate to a cloud multi-agent review) — depth is a prompted instruction to the agent,
+# driven by the same task_classification tier, not an API parameter. ----
+effort_selection:
+  owner: every phase agent, scoped by the task's task_classification tier
+  guidance:
+    low: >
+      `fast_path` items. code-reviewer's lightweight security spot-check (see its Fast
+      Path section) substitutes for a separate security_review; Trivy/Semgrep scans are
+      optional unless the diff touches a dependency or Dockerfile.
+    standard: >
+      `standard` items (the default). Full checklist pass for every phase agent;
+      security-auditor runs both Trivy (fs scan: vuln, secret, misconfig) and Semgrep
+      scoped to the diff's changed files.
+    high: >
+      `high_risk` items. Same as `standard`, plus: security-auditor widens Trivy's
+      severity floor and treats any Critical/High hit — even outside the diff's changed
+      surface — as blocking; code-reviewer and security-auditor both explicitly
+      re-confirm non-functionals, not just the acceptance criteria; and either agent may
+      recommend escalating to `/code-review ultra` (multi-agent cloud review) if the diff
+      is wide enough that a single-pass review genuinely risks missing something —
+      recommend it, don't silently decide to skip the normal phase instead.
+  rule: >
+    Depth scales with risk tier, not with how long the diff looks — a short diff that
+    flips an authz check is `high_risk` depth regardless of line count. Re-classify (per
+    task_classification) the moment a phase agent's own read of the change contradicts
+    the tier it was handed, rather than reviewing at the lighter depth anyway.
 
 # ---- The team: each role maps to a Claude Code subagent in .claude/agents/ ----
 roles:
