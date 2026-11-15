@@ -40,6 +40,7 @@ jobs:
             target/surefire-reports/
             target/failsafe-reports/
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload jar
         if: success()
@@ -48,3 +49,4 @@ jobs:
           name: app-jar
           path: target/*.jar
           if-no-files-found: ignore
+          retention-days: 7
