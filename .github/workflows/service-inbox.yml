@@ -1,0 +1,54 @@
+name: Service inbox
+
+# Lets this service handle requests from other services even when no session is open.
+# Needs the ANTHROPIC_API_KEY secret.
+on:
+  issues:
+    types: [opened, labeled]
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: service-inbox
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    if: >-
+      github.repository != 'TuanPhanDuy/project-archetype' &&
+      (github.event_name != 'issues' || (
+        contains(github.event.issue.labels.*.name, 'service-request') &&
+        (github.event.action == 'opened' || github.event.label.name == 'service-request') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)))
+    runs-on: ubuntu-latest   # Docker preinstalled, so `./mvnw verify` can run Testcontainers
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Work the inbox
+        uses: anthropics/claude-code-action@v1
+        env:
+          # A PAT/App token lets its PRs trigger CI and lets it comment in other services' repos.
+          GH_TOKEN: ${{ secrets.SERVICE_INBOX_TOKEN || secrets.GITHUB_TOKEN }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Follow .claude/skills/service-inbox/SKILL.md for this repository's open service requests.
+          claude_args: |
+            --max-turns 120
+            --allowedTools "Read,Glob,Grep,Edit,Write,Agent,Bash(./mvnw:*),Bash(git:*),Bash(gh issue:*),Bash(gh pr:*),Bash(gh label:*)"
