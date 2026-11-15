@@ -96,6 +96,26 @@ run `/refresh-knowledge` every day: Claude updates
 security advisories, new features, deprecations) and opens one PR for human review. Agents read
 the radar before relying on training data. Only security patch bumps touch `pom.xml`.
 
+## Cross-service requests: each service evaluates and acts on its own inbox
+
+When several sessions each own a service, no session edits another service's code. Instead:
+
+- **Ask** with `request-service-change`: it files a `service-request` issue in the owner's
+  repo (what, why, acceptance criteria, contract, urgency) and nudges the owner's live
+  session with `SendMessage` if one is running. A service that changes a contract it `owns`
+  files one to every service that `consumes` it (`cross_service.registry` in `sdlc.yaml`).
+- **Receive** with `service-inbox`: it collects open requests, messages from other sessions
+  and radar **Action needed** items, then decides for each: `not-ours` (re-filed to the
+  owner), `done`, `needs-info`, `needs-decision`, or `act`. `act` claims the issue, runs the
+  tier's normal pipeline and `/review-pr`; `high_risk` never auto-merges. The outcome is
+  commented back on the issue and the origin.
+
+It runs in a live session (`/loop 30m /service-inbox`) or, with no session open, in
+`.github/workflows/service-inbox.yml` on every new request and every 4 hours. Give that
+workflow a `SERVICE_INBOX_TOKEN` (PAT or GitHub App) so its PRs trigger CI and it can comment
+in other repos. Only requests from authors with write access, or from registered services,
+are acted on automatically.
+
 ## Misread requirements: retry at most 3 times, then clarify
 
 If work is wrong because the context or requirement was misunderstood, an agent may redo it

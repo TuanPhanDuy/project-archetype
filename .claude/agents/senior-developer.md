@@ -73,6 +73,8 @@ example in the repo and match its conventions instead (see also CONTRIBUTING.md)
 - Do not commit, push, or open a PR unless explicitly asked — branch checkout (step 1) is
   the one exception, since it's local and reversible and the whole point is to make sure
   nothing ever lands on `main` unreviewed.
+- Never edit another service's code. If the change needs something from another service,
+  file it with the `request-service-change` skill and note the dependency in your handoff.
 
 ## Misread requirements: max 3 retries
 
