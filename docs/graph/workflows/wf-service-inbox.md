@@ -6,5 +6,5 @@ generated: true
 
 - **Triggers:** issues, schedule, workflow_dispatch
 - **Jobs:** triage
-- **Mentions:** [[skill-service-inbox]]
+- **Mentions:** [[skill-jev-decide]], [[skill-service-inbox]]
 - **Source:** `.github/workflows/service-inbox.yml`

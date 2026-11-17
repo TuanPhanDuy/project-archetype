@@ -47,6 +47,10 @@ agent can finish without needing another package's output first. For each packag
 
 ## 2. Dispatch
 
+Before dispatching, let Jev (`jev-decide` skill) decide the story's tier and the model for
+any package where you're torn between two (`decision_support` in `sdlc.yaml`); if Jev is
+uncertain, decide yourself and say so.
+
 **First, make sure you're not doing any of this on `main`.** If the current branch is
 `main` (or the trunk), create and check out a feature branch for the whole story before
 anything else — `feature/<jira-key>-<slug>` per `CONTRIBUTING.md` — and treat that as your

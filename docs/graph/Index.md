@@ -11,7 +11,7 @@ Open the repo root as an Obsidian vault and use Graph view.
 [[code-reviewer]], [[devops-engineer]], [[product-owner]], [[requirements-analyst]], [[scrum-master]], [[security-auditor]], [[senior-developer]], [[solution-architect]], [[team-lead]], [[test-engineer]], [[ux-designer]], [[work-planner]]
 
 ## Skills
-[[skill-jira]], [[skill-qa-validate]], [[skill-request-service-change]], [[skill-service-inbox]]
+[[skill-jev-decide]], [[skill-jira]], [[skill-qa-validate]], [[skill-request-service-change]], [[skill-service-inbox]]
 
 ## Commands
 [[cmd-prd-to-jira]], [[cmd-refresh-knowledge]], [[cmd-review-pr]]

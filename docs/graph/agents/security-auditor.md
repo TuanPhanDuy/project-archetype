@@ -9,7 +9,7 @@ generated: true
 - **Role:** Security Reviewer — OWASP API Top 10, authz, input handling, secrets.
 - **Model:** default: per tier, as in review-pr: None
 - **Tools:** Read, Grep, Glob, Bash, WebSearch
-- **Mentions:** [[team-lead]], [[tier-fast_path]], [[tier-standard]]
+- **Mentions:** [[skill-jev-decide]], [[team-lead]], [[tier-fast_path]], [[tier-standard]]
 - **Docs:** [[TECH_RADAR]]
 - **Source:** `.claude/agents/security-auditor.md`
 
@@ -41,6 +41,8 @@ Check `docs/knowledge/TECH_RADAR.md` → **Action needed** for known advisories 
    the same change), say which round this is against `sdlc.yaml`'s
    `review_iteration_limit` (default 3), and note whether the same class of issue is
    recurring — that pattern matters more to `team-lead` than any single round's detail.
+6. Ask Jev (`jev-decide` skill, a `noul` with the claim and its source in `state`) whether
+   each advisory/CVE claim is supported; an unsupported one is reported as unverified.
 
 ## Automated scanners (Trivy + Semgrep)
 
