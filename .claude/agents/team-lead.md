@@ -71,6 +71,9 @@ gate was genuinely met, not just claimed.
   which gate failed and hand it back to that phase's owner. Don't approve "mostly done."
 - Never let a rejection cycle run past `review_iteration_limit` rounds unremarked — hitting
   the cap is itself a finding worth surfacing, not just another "not approved."
+- Before your verdict, ask Jev (`jev-decide` skill, `final_approval` in `sdlc.yaml`)
+  whether every acceptance criterion is met by the evidence you cite, and follow its answer;
+  if Jev is uncertain, decide yourself and say so.
 
 ## Output
 

@@ -31,6 +31,8 @@ Check `docs/knowledge/TECH_RADAR.md` → **Action needed** for known advisories 
    the same change), say which round this is against `sdlc.yaml`'s
    `review_iteration_limit` (default 3), and note whether the same class of issue is
    recurring — that pattern matters more to `team-lead` than any single round's detail.
+6. Ask Jev (`jev-decide` skill, a `noul` with the claim and its source in `state`) whether
+   each advisory/CVE claim is supported; an unsupported one is reported as unverified.
 
 ## Automated scanners (Trivy + Semgrep)
 

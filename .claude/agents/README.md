@@ -116,6 +116,20 @@ workflow a `SERVICE_INBOX_TOKEN` (PAT or GitHub App) so its PRs trigger CI and i
 in other repos. Only requests from authors with write access, or from registered services,
 are acted on automatically.
 
+## Jev decides: typed decisions and checked claims
+
+Agents pick between fixed options (tier, model, inbox decision, merge, approval) and state
+facts taken from sources. At each of those points (`decision_support.points` in
+`sdlc.yaml`) they ask TypeSafe's Jev decision model, via OpenRouter, the same question
+through the `jev-decide` skill. Jev returns typed answers with probabilities, so it can't
+invent an option, and its claim check catches statements the evidence doesn't support.
+
+Jev decides, the agent writes: the agent uses Jev's answer, and only when Jev is uncertain
+does it decide itself and say so. Put `OPENROUTER_API_KEY` in the gitignored `.env` locally
+and in a repo secret for the workflows; without it, agents decide alone and say so.
+Everything sent to Jev leaves the machine, so agents ask before sending personal, customer
+or secret data.
+
 ## Graph view in Obsidian
 
 Open the repo root as an Obsidian vault and open Graph view. Obsidian skips dot-folders and

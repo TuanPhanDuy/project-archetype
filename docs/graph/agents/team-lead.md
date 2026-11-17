@@ -9,7 +9,7 @@ generated: true
 - **Role:** Team Lead — Final go/no-go — confirms acceptance criteria met and every prior gate genuinely holds.
 - **Model:** default: sonnet, haiku: fast_path, opus: high_risk or 2nd+ review round
 - **Tools:** Read, Grep, Glob, Bash
-- **Mentions:** [[code-reviewer]], [[requirements-analyst]], [[scrum-master]], [[solution-architect]], [[tier-fast_path]], [[tier-high_risk]], [[tier-standard]], [[work-planner]]
+- **Mentions:** [[code-reviewer]], [[requirements-analyst]], [[scrum-master]], [[skill-jev-decide]], [[solution-architect]], [[tier-fast_path]], [[tier-high_risk]], [[tier-standard]], [[work-planner]]
 - **Docs:** [[PRD]]
 - **Source:** `.claude/agents/team-lead.md`
 
@@ -81,6 +81,9 @@ gate was genuinely met, not just claimed.
   which gate failed and hand it back to that phase's owner. Don't approve "mostly done."
 - Never let a rejection cycle run past `review_iteration_limit` rounds unremarked — hitting
   the cap is itself a finding worth surfacing, not just another "not approved."
+- Before your verdict, ask Jev (`jev-decide` skill, `final_approval` in `sdlc.yaml`)
+  whether every acceptance criterion is met by the evidence you cite, and follow its answer;
+  if Jev is uncertain, decide yourself and say so.
 
 ## Output
 

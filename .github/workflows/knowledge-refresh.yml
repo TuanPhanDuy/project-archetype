@@ -42,6 +42,8 @@ jobs:
 
       - name: Refresh tech radar
         uses: anthropics/claude-code-action@v1
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}   # Jev claim checks; optional
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
@@ -49,7 +51,7 @@ jobs:
           # No git/gh/curl: Claude only edits files; the PR step below does the git work.
           claude_args: |
             --max-turns 40
-            --allowedTools "Read,Glob,Grep,Edit,Write,WebSearch,WebFetch,Bash(./mvnw:*)"
+            --allowedTools "Read,Glob,Grep,Edit,Write,WebSearch,WebFetch,Bash(./mvnw:*),Bash(python3 .claude/skills/jev-decide/jev.py:*)"
 
       - name: Open or update PR
         uses: peter-evans/create-pull-request@v7

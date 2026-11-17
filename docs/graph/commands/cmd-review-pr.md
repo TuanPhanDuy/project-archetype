@@ -6,7 +6,7 @@ generated: true
 
 > Review a GitHub PR with code-reviewer + security-auditor and merge only if both come back fully clean
 
-- **Mentions:** [[code-reviewer]], [[requirements-analyst]], [[security-auditor]], [[tier-fast_path]], [[tier-high_risk]], [[tier-standard]]
+- **Mentions:** [[code-reviewer]], [[requirements-analyst]], [[security-auditor]], [[skill-jev-decide]], [[tier-fast_path]], [[tier-high_risk]], [[tier-standard]]
 - **Source:** `.claude/commands/review-pr.md`
 
 ## Source text
@@ -53,7 +53,8 @@ gh pr view "$N" --json title,body,baseRefName,headRefName,url,mergeable,mergeSta
   `requirements-analyst` assigned, or the PR body/description if it states one. If neither
   says, default to `standard` rather than guessing down to `fast_path`. If `ROUND > 1`,
   treat the dispatch as at least `opus`/`high` regardless of the item's tier — see
-  `model_selection`'s rule for recurring-finding rounds.
+  `model_selection`'s rule for recurring-finding rounds. Let Jev (`jev-decide` skill)
+  decide the tier from the PR diff summary; if Jev is uncertain, decide yourself and say so.
 
 ## 2. Review in parallel
 
@@ -94,7 +95,8 @@ same account that opened the PR, a plain issue comment is the reliable path; onl
 
 Auto-merge **only** if code-reviewer's verdict is exactly `APPROVE` (not "APPROVE WITH
 NITS") **and** security-auditor's verdict is exactly `PASS` (not "PASS WITH
-RECOMMENDATIONS") **and** `--no-merge` was not passed:
+RECOMMENDATIONS") **and** `--no-merge` was not passed **and** Jev (`jev-decide`, `merge_gate`
+in `sdlc.yaml`) decides the findings include nothing blocking (if Jev is uncertain, you decide):
 
 ```bash
 gh pr merge "$N" --squash --delete-branch   # or --merge / --rebase per --merge-strategy

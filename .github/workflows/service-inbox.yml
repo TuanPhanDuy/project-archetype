@@ -45,10 +45,11 @@ jobs:
         env:
           # A PAT/App token lets its PRs trigger CI and lets it comment in other services' repos.
           GH_TOKEN: ${{ secrets.SERVICE_INBOX_TOKEN || secrets.GITHUB_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}   # Jev second opinions; optional
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             Follow .claude/skills/service-inbox/SKILL.md for this repository's open service requests.
           claude_args: |
             --max-turns 120
-            --allowedTools "Read,Glob,Grep,Edit,Write,Agent,Bash(./mvnw:*),Bash(git:*),Bash(gh issue:*),Bash(gh pr:*),Bash(gh label:*)"
+            --allowedTools "Read,Glob,Grep,Edit,Write,Agent,Bash(./mvnw:*),Bash(git:*),Bash(gh issue:*),Bash(gh pr:*),Bash(gh label:*),Bash(python3 .claude/skills/jev-decide/jev.py:*)"

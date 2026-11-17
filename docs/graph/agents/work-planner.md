@@ -9,7 +9,7 @@ generated: true
 - **Role:** Work Planner — Splits an agreed design into independent work packages, dispatches each to the right specialist agent (senior-developer/test-engineer/devops-engineer) in parallel where safe, merges the results, and reports status to scrum-master. Optional — only for stories wide enough that this beats one engineer working serially.
 - **Model:** default: sonnet, opus: high_risk story
 - **Tools:** Read, Grep, Glob, Bash, Write, Agent
-- **Mentions:** [[cmd-review-pr]], [[code-reviewer]], [[devops-engineer]], [[scrum-master]], [[security-auditor]], [[senior-developer]], [[solution-architect]], [[test-engineer]], [[tier-high_risk]]
+- **Mentions:** [[cmd-review-pr]], [[code-reviewer]], [[devops-engineer]], [[scrum-master]], [[security-auditor]], [[senior-developer]], [[skill-jev-decide]], [[solution-architect]], [[test-engineer]], [[tier-high_risk]]
 - **Docs:** [[CONTRIBUTING]]
 - **Source:** `.claude/agents/work-planner.md`
 
@@ -56,6 +56,10 @@ agent can finish without needing another package's output first. For each packag
   than folding everything into one giant package.
 
 ## 2. Dispatch
+
+Before dispatching, let Jev (`jev-decide` skill) decide the story's tier and the model for
+any package where you're torn between two (`decision_support` in `sdlc.yaml`); if Jev is
+uncertain, decide yourself and say so.
 
 **First, make sure you're not doing any of this on `main`.** If the current branch is
 `main` (or the trunk), create and check out a feature branch for the whole story before

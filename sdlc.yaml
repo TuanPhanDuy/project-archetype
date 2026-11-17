@@ -159,6 +159,31 @@ effort_selection:
     task_classification) the moment a phase agent's own read of the change contradicts
     the tier it was handed, rather than reviewing at the lighter depth anyway.
 
+# ---- Decision support: typed decisions from Jev (TypeSafe, via
+# OpenRouter) at each point where an agent picks between fixed options or asserts a fact.
+# Jev decides, the agent writes; when Jev is uncertain the agent decides and says so. ----
+decision_support:
+  provider: openrouter
+  model: typesafe/jev-1.14
+  key_env: OPENROUTER_API_KEY   # env or .env; missing key: the agent decides and says so
+  skill: .claude/skills/jev-decide/SKILL.md
+  min_confidence: 0.6           # choice/score: agree only at or above this
+  noul_yes: 0.8
+  noul_no: 0.2
+  points:
+    tier_classification: >
+      Whoever receives requirements-analyst's tier (review-pr step 1, service-inbox,
+      work-planner) asks Jev the same choice and uses Jev's tier.
+    model_selection: When unsure between two models for a dispatch, Jev picks.
+    inbox_triage: service-inbox's decision per request; only `act` needs Jev's agreement.
+    merge_gate: Before /review-pr auto-merges, Jev decides whether the combined findings include anything blocking.
+    final_approval: team-lead asks Jev whether every acceptance criterion is met by the evidence it cites.
+    claim_grounding: >
+      Before stating a version, API, advisory or behavior taken from a source (radar
+      refresh, security findings, design notes), Jev checks the claim against that source;
+      unsupported claims are dropped or marked unverified.
+  privacy: Everything in `state` leaves the machine; ask before sending personal, customer or secret data.
+
 # ---- Cross-service requests: one service (or session) asks the session that owns another
 # service to change something. A GitHub issue in the owner's repo is the durable record;
 # a message to a live session is only a nudge pointing at it. ----
