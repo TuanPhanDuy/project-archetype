@@ -21,19 +21,26 @@ concurrency:
 jobs:
   triage:
     if: >-
-      github.repository != 'TuanPhanDuy/project-archetype' &&
       (github.event_name != 'issues' || (
         contains(github.event.issue.labels.*.name, 'service-request') &&
         (github.event.action == 'opened' || github.event.label.name == 'service-request') &&
         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)))
     runs-on: ubuntu-latest   # Docker preinstalled, so `./mvnw verify` can run Testcontainers
     timeout-minutes: 60
+    env:
+      HAS_CLAUDE_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
     steps:
+      - name: Skip without ANTHROPIC_API_KEY
+        if: env.HAS_CLAUDE_KEY != 'true'
+        run: echo "::notice::ANTHROPIC_API_KEY secret is not set; service inbox skipped."
+
       - uses: actions/checkout@v4
+        if: env.HAS_CLAUDE_KEY == 'true'
         with:
           fetch-depth: 0
 
       - name: Set up JDK 25
+        if: env.HAS_CLAUDE_KEY == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -41,6 +48,7 @@ jobs:
           cache: maven
 
       - name: Work the inbox
+        if: env.HAS_CLAUDE_KEY == 'true'
         uses: anthropics/claude-code-action@v1
         env:
           # A PAT/App token lets its PRs trigger CI and lets it comment in other services' repos.
