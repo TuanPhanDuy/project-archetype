@@ -11,5 +11,5 @@ Ids were `UUID.randomUUID()` (v4). Random keys scatter inserts across the primar
 
 ## Consequences
 - New rows get time-ordered ids; old rows keep their v4 ids, so URLs and cross-service references stay valid.
-- An id now reveals its creation time to the millisecond. That is acceptable here because ids are not secrets.
+- An id now reveals its creation time to the millisecond and carries 74 random bits instead of 122. That is acceptable because ids are identifiers, never secrets: never use an id as a token, share link or proof of possession.
 - Not unique-per-millisecond ordered: ids created in the same millisecond sort randomly among themselves.

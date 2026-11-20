@@ -11,6 +11,7 @@ public final class UuidV7 {
     private UuidV7() {
     }
 
+    /** A new v7 id stamped with the current time. */
     public static UUID generate() {
         return generate(System.currentTimeMillis());
     }
