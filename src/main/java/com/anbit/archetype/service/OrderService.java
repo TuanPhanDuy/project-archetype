@@ -1,5 +1,6 @@
 package com.anbit.archetype.service;
 
+import com.anbit.archetype.common.UuidV7;
 import com.anbit.archetype.common.error.IdempotencyKeyConflictException;
 import com.anbit.archetype.common.error.ResourceNotFoundException;
 import com.anbit.archetype.domain.IdempotencyKey;
@@ -180,11 +181,11 @@ public class OrderService {
     }
 
     private Order buildOrder(CreateOrderRequest request) {
-        Order order = new Order(UUID.randomUUID(), request.customerName(), clock.instant());
+        Order order = new Order(UuidV7.generate(), request.customerName(), clock.instant());
         for (CreateOrderRequest.Item item : request.items()) {
             Product product = productRepository.findById(item.productId())
                     .orElseThrow(() -> ResourceNotFoundException.of("Product", item.productId()));
-            order.addItem(new OrderItem(UUID.randomUUID(), product, item.quantity()));
+            order.addItem(new OrderItem(UuidV7.generate(), product, item.quantity()));
         }
         return order;
     }

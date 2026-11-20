@@ -35,4 +35,4 @@ Open the repo root as an Obsidian vault and use Graph view.
 [[ARCHITECTURE]], [[TECH_RADAR]], [[PRD]], [[GETTING_STARTED]], [[CONTRIBUTING]], [[MCP_SERVERS]]
 
 ## ADRs
-[[0001-bump-spring-boot-4-0-9]]
+[[0001-bump-spring-boot-4-0-9]], [[0002-uuid-v7-ids]]

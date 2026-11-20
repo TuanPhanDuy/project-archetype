@@ -1,5 +1,6 @@
 package com.anbit.archetype.service;
 
+import com.anbit.archetype.common.UuidV7;
 import com.anbit.archetype.common.error.ResourceNotFoundException;
 import com.anbit.archetype.domain.JobType;
 import com.anbit.archetype.domain.ProcessingJob;
@@ -35,7 +36,7 @@ public class JobService {
     @Transactional
     public ProcessingJob create(JobType type, @Nullable UUID referenceId) {
         ProcessingJob job =
-                new ProcessingJob(UUID.randomUUID(), type, referenceId, clock.instant());
+                new ProcessingJob(UuidV7.generate(), type, referenceId, clock.instant());
         return repository.save(job);
     }
 
