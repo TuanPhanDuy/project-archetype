@@ -78,6 +78,8 @@ HTTP ─▶ controller ─▶ service ─▶ repository ─▶ domain ─▶ Dat
    `@EntityGraph` finders (open-in-view is disabled).
 9. **Native-image safe.** Avoid runtime reflection / classpath scanning without registered
    `RuntimeHints`.
+10. **Ids are UUID v7.** New primary keys and event ids come from `UuidV7.generate()`, never
+    `UUID.randomUUID()`: v7 is time-ordered, so inserts stay append-mostly on the index.
 
 ## DTO mapping
 

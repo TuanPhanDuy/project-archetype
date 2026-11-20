@@ -1,5 +1,6 @@
 package com.anbit.archetype.service;
 
+import com.anbit.archetype.common.UuidV7;
 import com.anbit.archetype.common.error.ResourceNotFoundException;
 import com.anbit.archetype.domain.Category;
 import com.anbit.archetype.domain.Product;
@@ -45,7 +46,7 @@ public class ProductService {
     @Transactional
     public Product create(ProductRequest request) {
         Product product = new Product(
-                UUID.randomUUID(),
+                UuidV7.generate(),
                 request.name(),
                 request.description(),
                 request.price(),

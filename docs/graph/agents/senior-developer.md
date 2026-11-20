@@ -54,6 +54,7 @@ current docs rather than trusting possibly-stale training knowledge. Fall back t
 - **Persistence**: every schema change is a NEW Flyway migration `src/main/resources/db/migration/V<n>__<desc>.sql`. Never edit an applied migration. Keep `ddl-auto: validate` — if validation fails, the migration is wrong, not the config.
 - **Null-safety**: package is `@NullMarked`; mark nullable fields/params with `@Nullable`.
 - **Inject `Clock`** for timestamps; never call `Instant.now()` directly.
+- **Ids are UUID v7**: new primary keys and event ids use `UuidV7.generate()`, never `UUID.randomUUID()`.
 - **Keep it native-friendly**: no ad-hoc reflection or runtime resource scanning.
 
 Outside that layer — a shell script, GitHub Actions workflow, Dockerfile, docs, or a

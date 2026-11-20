@@ -1,5 +1,6 @@
 package com.anbit.archetype.service;
 
+import com.anbit.archetype.common.UuidV7;
 import com.anbit.archetype.common.error.ResourceNotFoundException;
 import com.anbit.archetype.domain.Category;
 import com.anbit.archetype.dto.CategoryRequest;
@@ -35,7 +36,7 @@ public class CategoryService {
     @Transactional
     public Category create(CategoryRequest request) {
         Category category = new Category(
-                UUID.randomUUID(), request.name(), request.description(), clock.instant());
+                UuidV7.generate(), request.name(), request.description(), clock.instant());
         return repository.save(category);
     }
 }
