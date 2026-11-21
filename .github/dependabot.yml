@@ -21,3 +21,9 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+
+  # Base images are pinned to a patch build (security fixes land as PRs, not silently).
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
