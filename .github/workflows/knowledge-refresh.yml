@@ -54,7 +54,7 @@ jobs:
             --allowedTools "Read,Glob,Grep,Edit,Write,WebSearch,WebFetch,Bash(./mvnw:*),Bash(python3 .claude/skills/jev-decide/jev.py:*)"
 
       - name: Open or update PR
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/knowledge-refresh
           delete-branch: true
