@@ -2,7 +2,7 @@
 
 Shared, dated knowledge for the agents: what's current, what's risky, what to adopt. Refreshed daily; merged only after human review.
 
-**Last checked:** 2026-11-20
+**Last checked:** 2026-11-21
 
 ## Action needed (security)
 
@@ -46,3 +46,4 @@ _None recorded yet._
 - 2026-11-15 — Checked spring.io/security (newest entries 2026-08-20, none new) and pgjdbc GHSAs: all covered by Boot 4.0.9, no pom change. Not checked: Flyway, Testcontainers, GraalVM, OTel advisories, GitHub Actions, Claude Code changelog.
 - 2026-11-16 — spring.io/security (still newest 2026-08-20), pgjdbc GHSAs and Boot releases (4.0.9 / 4.1.2 still latest) checked: only new item is pgjdbc GHSA-hggc-j2qh-988m, not affected; no pom change. Not checked: as 2026-11-15, plus postgresql.org (domain blocked).
 - 2026-11-20 — spring.io/security: 8 new advisories (2026-11-19), Spring Security Critical CVE-2026-59273 fixed in 7.0.9 / Boot 4.0.10; archetype not affected, no pom change. pgjdbc GHSAs unchanged. Not checked: postgresql.org (blocked), Flyway, Testcontainers, GraalVM, OTel advisories, GitHub Actions, Claude Code changelog; Jev source check not run.
+- 2026-11-21 — Rechecked spring.io/security, pgjdbc GHSAs and Boot releases (4.0.10 / 4.1.3 latest): nothing new, no pom change. Not checked: postgresql.org (blocked), Flyway, Testcontainers, GraalVM, OTel advisories, GitHub Actions, Claude Code changelog.
