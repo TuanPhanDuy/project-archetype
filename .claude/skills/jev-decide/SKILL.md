@@ -14,7 +14,8 @@ description: >
 **Jev decides, you write.** Use Jev's answer as the decision and write everything around
 it. When Jev is uncertain, decide yourself and say so. Everything in `state` leaves the
 machine: ask before sending personal, customer or secret data. Never print or copy the API
-key; the script reads `OPENROUTER_API_KEY` from the environment or the gitignored `.env`.
+key; the script reads `OPENROUTER_API_KEY` from the environment, else from the first `.env`
+holding it in the working directory or any parent.
 
 The API is alpha: if a call fails unexpectedly, re-read
 https://openrouter.ai/docs/guides/community/jev before guessing.
@@ -41,7 +42,7 @@ EOF
 - Jev knows only `state`: put the evidence there as named fields.
 - Claim check: `state` = `{"claim": ..., "source": ...}`, one `noul` "Is the claim fully
   supported by the source alone?".
-- `--dry-run` prints exactly what would be sent, without sending.
+- `--dry-run` prints exactly what would be sent, without sending; `--verbose` shows HTTP error bodies.
 
 ## Read the answer
 
@@ -53,4 +54,5 @@ the (`noul_no`, `noul_yes`) band from `sdlc.yaml` › `decision_support`.
 | Confident | Act on Jev's answer; cite it in one line ("Jev: high_risk, 0.97") |
 | Uncertain | Decide yourself and say why ("Jev unsure (0.52) → standard because …") |
 | Claim not supported | Don't state it; find better evidence or mark it unverified |
-| Exit 3 (no key) or 4 (API error) | Decide yourself and say Jev wasn't available |
+| Exit 2 (malformed answer) | Decide yourself and say Jev's answer was unusable |
+| Exit 3 (no key), 4 (API error) or 5 (bad input) | Decide yourself and say Jev wasn't available |
