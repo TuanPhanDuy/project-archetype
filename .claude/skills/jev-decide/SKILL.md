@@ -23,7 +23,7 @@ https://openrouter.ai/docs/guides/community/jev before guessing.
 ## Ask
 
 ```bash
-python3 .claude/skills/jev-decide/jev.py <<'EOF'
+python3 -B .claude/skills/jev-decide/jev.py <<'EOF'
 {
   "state": {"story": "...", "diff_summary": "..."},
   "questions": {

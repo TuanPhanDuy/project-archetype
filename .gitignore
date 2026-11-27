@@ -32,3 +32,5 @@ archetype/src/main/resources/archetype-resources/
 .obsidian/*
 !.obsidian/app.json
 !.obsidian/graph.json
+
+__pycache__/
