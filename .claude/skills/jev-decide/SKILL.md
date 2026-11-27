@@ -15,7 +15,8 @@ description: >
 it. When Jev is uncertain, decide yourself and say so. Everything in `state` leaves the
 machine: ask before sending personal, customer or secret data. Never print or copy the API
 key; the script reads `OPENROUTER_API_KEY` from the environment, else from the first `.env`
-holding it in the working directory or any parent.
+holding it in the working directory or any parent; a `.env` that git tracks is skipped. Send a
+short description, never code, secrets or customer data.
 
 The API is alpha: if a call fails unexpectedly, re-read
 https://openrouter.ai/docs/guides/community/jev before guessing.
